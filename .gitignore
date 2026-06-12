@@ -1,0 +1,7 @@
+server.py
+pending-summary.txt
+summary-result.json
+auth-qr.png
+__pycache__/
+*.pyc
+.workbuddy/
