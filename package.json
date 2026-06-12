@@ -1,0 +1,9 @@
+{
+  "name": "ai-todo",
+  "version": "1.0.0",
+  "description": "AI-powered todo manager",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

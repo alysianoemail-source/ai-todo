@@ -539,7 +539,6 @@ body {
       <span class="stat-done"><span class="stat-num" id="statDone">0</span> 完成</span>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" onclick="App.syncToCloud()" title="同步到飞书">☁️</button>
       <button class="icon-btn" onclick="App.exportData()" title="导出JSON">📤</button>
       <button class="icon-btn" onclick="App.importData()" title="导入JSON">📥</button>
     </div>
@@ -583,8 +582,7 @@ body {
 
 <!-- Footer -->
 <div style="text-align:center;padding:16px 0 0;font-size:11px;color:var(--text3);line-height:1.8;">
-  🤖 AI 分类在浏览器本地运行，不消耗 token，完全免费<br>
-  🤖 AI 在浏览器本地运行，不消耗 token · 导出 JSON 可备份到飞书
+  🤖 AI 本地运行，零 token · 数据存于本设备 · 📤📥 导出备份
 </div>
 
 <!-- Toast -->
@@ -849,12 +847,36 @@ const App = (() => {
   let todos = [];
   let filter = 'all';
 
-  function save() { localStorage.setItem('ai-todo-v2', JSON.stringify(todos)); }
+  function save() {
+    localStorage.setItem('ai-todo-v2', JSON.stringify(todos));
+    // Auto-sync to server in background
+    fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(todos)
+    }).catch(() => {});
+  }
+
   function load() {
+    // Try server first, fall back to localStorage
+    fetch('/api/sync')
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok && data.data && data.data.length > 0) {
+          todos = data.data;
+          render();
+        }
+      })
+      .catch(() => {});
+    // Always load localStorage as baseline
     try {
       const d = localStorage.getItem('ai-todo-v2');
-      if (d) todos = JSON.parse(d);
-    } catch (_) { todos = []; }
+      if (d) {
+        const local = JSON.parse(d);
+        if (local.length > todos.length) todos = local;
+        render();
+      }
+    } catch (_) {}
   }
 
   // ==================== Title Optimizer ====================
@@ -1300,24 +1322,23 @@ const App = (() => {
 
   function exportData() {
     const data = JSON.stringify(todos, null, 2);
+    // Download file
     const blob = new Blob([data], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `ai-todo-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = 'ai-todo-' + new Date().toISOString().split('T')[0] + '.json';
     a.click();
     URL.revokeObjectURL(a.href);
-    toast('📤 已导出');
-  }
-
-  function syncToCloud() {
-    const json = JSON.stringify(todos, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `ai-todo-sync-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast('☁️ 文件已下载，请确认同步到飞书');
+    // Also copy to clipboard for pasting into Feishu
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(data).then(function() {
+        toast('📤 已导出 + 已复制到剪贴板。可粘贴到飞书发给机器人备份');
+      }).catch(function() {
+        toast('📤 已导出');
+      });
+    } else {
+      toast('📤 已导出');
+    }
   }
 
   function importData() {
@@ -1486,7 +1507,7 @@ const App = (() => {
     });
   }
 
-  return { init, syncFromThoughts, toggle, remove, openEdit, closeEdit, saveEdit, addSubTask, toggleSubTask, removeSubTask, syncToCloud, archiveOld, clearThoughts, exportData, importData, confirmSummary, closeSummary, toggleSummaryItem, editSummaryItem, addSummaryItem };
+  return { init, syncFromThoughts, toggle, remove, openEdit, closeEdit, saveEdit, addSubTask, toggleSubTask, removeSubTask, archiveOld, clearThoughts, exportData, importData, confirmSummary, closeSummary, toggleSummaryItem, editSummaryItem, addSummaryItem };
 })();
 
 document.addEventListener('DOMContentLoaded', () => App.init());
