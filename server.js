@@ -1,6 +1,7 @@
 // AI Todo sync server — minimal Node.js backend
-// Serves static files, auto-syncs data across devices, backs up to Feishu
+// Serves static files, proxies AI API calls, backs up to Feishu
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -103,6 +104,40 @@ const server = http.createServer((req, res) => {
       } catch(e) {
         json(res, { ok: false, error: 'invalid json' }, 400);
       }
+    });
+    return;
+  }
+
+  // API: POST /api/groq — proxy to Groq AI (avoids CORS)
+  if (req.method === 'POST' && req.url === '/api/groq') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      var groqReq = https.request({
+        hostname: 'api.groq.com',
+        path: '/openai/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + (process.env.GROQ_KEY || '')
+        }
+      }, function(groqRes) {
+        var data = '';
+        groqRes.on('data', c => data += c);
+        groqRes.on('end', () => {
+          res.writeHead(groqRes.statusCode, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          });
+          res.end(data);
+        });
+      });
+      groqReq.on('error', () => {
+        res.writeHead(502);
+        res.end('{"error":"Groq unavailable"}');
+      });
+      groqReq.write(body);
+      groqReq.end();
     });
     return;
   }

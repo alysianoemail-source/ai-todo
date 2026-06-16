@@ -1,5 +1,5 @@
 // Service Worker for AI Todo PWA
-const CACHE = 'ai-todo-v3';
+const CACHE = 'ai-todo-v4';
 
 self.addEventListener('install', e => {
   e.waitUntil(

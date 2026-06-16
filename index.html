@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"><!-- v8 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -539,9 +539,23 @@ body {
       <span class="stat-done"><span class="stat-num" id="statDone">0</span> 完成</span>
     </div>
     <div class="header-actions">
+      <button class="icon-btn" onclick="App.toggleSettings()" title="设置AI模型">⚙️</button>
       <button class="icon-btn" onclick="App.exportData()" title="导出JSON">📤</button>
       <button class="icon-btn" onclick="App.importData()" title="导入JSON">📥</button>
     </div>
+  </div>
+
+  // Settings Panel
+  <div id="settingsPanel" style="display:none;background:var(--card);border-radius:10px;padding:12px;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-size:13px;font-weight:500;">🧠 AI 长文总结</span>
+      <span id="aiStatus" style="font-size:11px;color:var(--text3);">未设置</span>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <input id="groqKey" type="password" placeholder="输入 OpenRouter API Key（sk-or-xxx）" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:monospace;">
+      <button class="sync-btn" style="padding:6px 12px;font-size:12px;white-space:nowrap;" onclick="App.saveGroqKey()">保存</button>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px;">去 <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--blue);">openrouter.ai/keys</a> 免费注册获取（支持 Google 登录）</div>
   </div>
 
   <!-- Todo List -->
@@ -561,7 +575,10 @@ body {
   <!-- Sync Bar -->
   <div class="sync-bar">
     <div class="sync-line"></div>
-    <button class="sync-btn" id="syncBtn" onclick="App.syncFromThoughts()">✨ 一键更新</button>
+    <div style="text-align:center;">
+      <button class="sync-btn" id="syncBtn" onclick="App.syncFromThoughts()">✨ 一键更新</button>
+      <div id="aiLabel" style="font-size:10px;color:var(--text3);margin-top:4px;"></div>
+    </div>
     <div class="sync-line"></div>
   </div>
 
@@ -846,37 +863,31 @@ const App = (() => {
 
   let todos = [];
   let filter = 'all';
+  var SYNC_URL = 'https://jsonblob.com/api/jsonBlob/019ec939-63c6-78b0-a9eb-d299acdfb743';
 
   function save() {
-    localStorage.setItem('ai-todo-v2', JSON.stringify(todos));
-    // Auto-sync to server in background
-    fetch('/api/sync', {
-      method: 'POST',
+    localStorage.setItem('ai-todo-v3', JSON.stringify(todos));
+    fetch(SYNC_URL, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(todos)
-    }).catch(() => {});
+      body: JSON.stringify({ todos: todos })
+    }).catch(function(){});
   }
 
   function load() {
-    // Try server first, fall back to localStorage
-    fetch('/api/sync')
-      .then(r => r.json())
-      .then(data => {
-        if (data.ok && data.data && data.data.length > 0) {
-          todos = data.data;
+    fetch(SYNC_URL)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.todos && data.todos.length > 0) {
+          todos = data.todos;
+          localStorage.setItem('ai-todo-v3', JSON.stringify(todos));
           render();
         }
       })
-      .catch(() => {});
-    // Always load localStorage as baseline
-    try {
-      const d = localStorage.getItem('ai-todo-v2');
-      if (d) {
-        const local = JSON.parse(d);
-        if (local.length > todos.length) todos = local;
-        render();
-      }
-    } catch (_) {}
+      .catch(function() {
+        var d = localStorage.getItem('ai-todo-v3') || localStorage.getItem('ai-todo-v2');
+        if (d) { todos = JSON.parse(d); render(); }
+      });
   }
 
   // ==================== Title Optimizer ====================
@@ -893,11 +904,14 @@ const App = (() => {
     for (const re of noise) t = t.replace(re, '');
     t = t.replace(/\s+/g, '').trim();
     if (t.length < 2) return raw.trim().replace(/\s+/g, '');
-    if (t.length > 15) {
+    if (t.length > 15)     {
       const chunks = t.split(/[，,、；;。！？\s]+/).filter(function(c){return c.length>=2;});
       if (chunks.length) {
         chunks.sort(function(a,b){return (b.match(/[\u4e00-\u9fff]/g)||[]).length-(a.match(/[\u4e00-\u9fff]/g)||[]).length;});
         t = chunks[0];
+      } else {
+        // Very long single chunk — truncate
+        t = t.slice(0, 12);
       }
     }
     t = t.replace(/^[的了呢吗啊呀哦]+/, '').replace(/[的了呢吗啊呀哦]+$/, '');
@@ -909,19 +923,17 @@ const App = (() => {
 
   function extractTodosFromLongText(text) {
     const items = [];
-
-    // Split into logical blocks
     const blocks = text.split(/\n{2,}/);
 
     for (const block of blocks) {
       const trimmed = block.trim();
       if (!trimmed || trimmed.length < 4) continue;
 
+      let foundStructured = false;
       const lines = trimmed.split(/\n/);
 
-      // Detect block context from first line
       const firstLine = lines[0].trim();
-      let blockTime = 0; // 0 = no override
+      let blockTime = 0;
       if (/整块|完整|周末/.test(firstLine) && firstLine.length < 40) blockTime = 180;
       else if (/零散|碎片|通勤|午休|睡前/.test(firstLine) && firstLine.length < 40) blockTime = 20;
 
@@ -929,22 +941,17 @@ const App = (() => {
         let line = lines[i].trim();
         if (!line) continue;
 
-        // Skip section headers (short, no numbered marker)
         if (i === 0 && line.length < 40 && !/\d+[\.\)、]/.test(line) && !/^[-•·]/.test(line)) continue;
 
         const numbered = line.match(/^(\d+)[\.\)、]\s*(.+)/);
         const bulleted = line.match(/^[-•·]\s*(.+)/);
 
         let core = '';
-        if (numbered) core = numbered[2];
-        else if (bulleted) core = bulleted[1];
-        else if (line.length >= 5 && /[做学读写看练研究完成开展推进处理].{2,}/.test(line)) {
-          core = line;
-        }
+        if (numbered) { core = numbered[2]; foundStructured = true; }
+        else if (bulleted) { core = bulleted[1]; foundStructured = true; }
+        else if (/[做学读写看练研究完成开展推进处理].{2,}/.test(line)) { core = line; }
 
         if (!core) continue;
-
-        // Clean: remove trailing explanations, parentheses, punctuation
         core = core.replace(/[—\-]{1,3}\s*.+$/, '');
         core = core.replace(/[（(][^)）]{0,30}[)）]$/, '');
         core = core.replace(/[，,。\.；;！!？?]+$/, '');
@@ -954,46 +961,62 @@ const App = (() => {
         const title = optimizeTitle(core);
         if (title.length < 2) continue;
 
-        // Time estimate: block context > line hints > text analysis
         let em = blockTime || estimateTime(line);
         if (/半天/.test(line)) em = 240;
         else if (/周末|整块/.test(line)) em = 180;
         else if (/碎片|通勤|午休|睡前|10.*分|15.*分/.test(line)) em = 20;
         else if (/小时/.test(line)) em = 60;
 
-        // Sub-tasks from "——" or "包括/含"
         let subTasks = [];
         const subMatch = line.match(/[—\-]{1,3}\s*(.+)/);
-        if (subMatch) {
-          subTasks = subMatch[1].split(/[，,、；;]/).map(s => s.trim()).filter(s => s.length >= 2 && s.length <= 20);
-        }
+        if (subMatch) subTasks = subMatch[1].split(/[，,、；;]/).map(s => s.trim()).filter(s => s.length >= 2 && s.length <= 20);
 
-        items.push({
-          title, estimatedMinutes: em, category: 'other',
-          note: '', subTasks: subTasks.slice(0, 6)
-        });
+        items.push({ title, estimatedMinutes: em, category: 'other', note: '', subTasks: subTasks.slice(0, 6) });
+      }
+
+      // Fallback: no structured items found → split by sentence
+      if (!foundStructured) {
+        const sentences = trimmed.split(/[。！？\n]+/).map(s => s.trim()).filter(s => s.length >= 8 && s.length <= 80);
+        for (const s of sentences) {
+          const clean = s.replace(/[—\-]{1,3}\s*.+$/, '').replace(/[（(][^)）]{0,30}[)）]$/, '').replace(/[，,；;！!？?]+$/, '').trim();
+          if (clean.length < 4) continue;
+          const title = optimizeTitle(clean);
+          if (title.length < 3) continue;
+          const em = estimateTime(s);
+          items.push({ title, estimatedMinutes: em, category: 'other', note: '', subTasks: [] });
+        }
       }
     }
 
-    // Deduplicate
     const seen = new Set();
-    return items.filter(item => {
-      if (seen.has(item.title)) return false;
-      seen.add(item.title);
-      return true;
-    });
+    return items.filter(item => { if (seen.has(item.title)) return false; seen.add(item.title); return true; });
   }
 
   function syncFromThoughts() {
     const input = document.getElementById('thoughtInput').value.trim();
     if (!input) return toast('请先在下方输入你的想法');
 
-    // Long text (>100 chars) → smart extraction
-    if (input.length >= 100) {
-      const extracted = extractTodosFromLongText(input);
-      if (extracted.length === 0) {
-        toast('未识别到待办项，请检查内容或缩短后重试');
+    // Long text (>25 chars) → AI extraction
+    if (input.length >= 25) {
+      var key = localStorage.getItem('groq-key');
+      if (key) {
+        aiExtractTodos(input, key);
         return;
+      }
+      // No AI key → local extraction
+      var extracted = extractTodosFromLongText(input);
+      if (extracted.length === 0) {
+        // Best-effort: split by common separators
+        var sentences = input.split(/[。！？\n，,；;]+/).filter(function(s){return s.trim().length>=4;});
+        if (sentences.length > 0) {
+          extracted = sentences.slice(0, 8).map(function(s) {
+            return { title: optimizeTitle(s.trim()), estimatedMinutes: 30, category: 'other', subTasks: [], note: '' };
+          }).filter(function(t){return t.title.length>=3;});
+        }
+      }
+      if (extracted.length === 0) {
+        // Last resort: use whole text as one item
+        extracted = [{ title: optimizeTitle(input), estimatedMinutes: 30, category: 'other', subTasks: [], note: '' }];
       }
       showSummaryPreview(extracted);
       return;
@@ -1083,6 +1106,108 @@ const App = (() => {
     const skip = skipped ? `，跳过 ${skipped} 项重复` : '';
     const merge = merged.length < added ? `，合并为 ${merged.length} 条` : '';
     toast(msg + merge + skip || '列表已是最新');
+  }
+
+  // ==================== AI Model (Groq) ====================
+
+  function toggleSettings() {
+    var panel = document.getElementById('settingsPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    var key = localStorage.getItem('groq-key');
+    if (key) document.getElementById('groqKey').value = key;
+  }
+
+  function saveGroqKey() {
+    var key = document.getElementById('groqKey').value.trim();
+    if (key && (key.startsWith('sk-or-') || key.startsWith('gsk_'))) {
+      localStorage.setItem('groq-key', key);
+      document.getElementById('settingsPanel').style.display = 'none';
+      updateAiStatus();
+      toast('✅ AI Key 已保存');
+    } else {
+      toast('Key 格式错误，应以 sk-or- 或 gsk_ 开头');
+    }
+  }
+
+  function updateAiStatus() {
+    var key = localStorage.getItem('groq-key');
+    var el = document.getElementById('aiStatus');
+    var label = document.getElementById('aiLabel');
+    if (key && key.startsWith('sk-or-')) {
+      el.textContent = '已就绪 ✓';
+      el.style.color = 'var(--green)';
+      label.textContent = '🧠 AI 增强模式';
+      label.style.color = 'var(--green)';
+    } else if (key && key.startsWith('gsk_')) {
+      el.textContent = 'Groq（可能受限）';
+      el.style.color = 'var(--amber)';
+      label.textContent = '⚠️ Groq 不支持浏览器，换 OpenRouter';
+      label.style.color = 'var(--amber)';
+    } else {
+      el.textContent = '未设置';
+      el.style.color = 'var(--text3)';
+      label.textContent = '💡 设 AI Key 后自动总结长文';
+      label.style.color = 'var(--text3)';
+    }
+  }
+
+  function aiExtractTodos(text, key) {
+    var btn = document.getElementById('syncBtn');
+    btn.textContent = '🤔 AI 总结中...';
+    btn.disabled = true;
+
+    // OpenRouter (supports CORS) or Groq direct
+    var url = key.startsWith('sk-or-')
+      ? 'https://openrouter.ai/api/v1/chat/completions'
+      : 'https://api.groq.com/openai/v1/chat/completions';
+    var model = key.startsWith('sk-or-')
+      ? 'google/gemini-2.0-flash-exp:free'
+      : 'llama-3.1-8b-instant';
+
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          { role: 'system', content: '你是一个待办提取工具。从用户输入的混乱文本中提取可执行的待办事项。只返回一个JSON数组，每项有title（简短标题，15字内）和estimatedMinutes（预估分钟数，默认30）字段。不要返回任何其他内容。' },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.3,
+        max_tokens: 1024
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.textContent = '✨ 一键更新';
+      btn.disabled = false;
+      var content = data.choices && data.choices[0] && data.choices[0].message.content;
+      if (!content) { toast('AI 未返回结果'); return; }
+      try {
+        // Extract JSON array from response
+        var jsonStr = content.match(/\[[\s\S]*\]/);
+        if (!jsonStr) { toast('AI 返回格式异常'); return; }
+        var todos = JSON.parse(jsonStr[0]);
+        if (!todos.length) { toast('未提取到待办项'); return; }
+        showSummaryPreview(todos.map(function(t) {
+          return { title: t.title, estimatedMinutes: t.estimatedMinutes || 30, category: 'other', subTasks: [], note: '' };
+        }));
+      } catch(e) {
+        toast('AI 返回解析失败，请重试');
+      }
+    })
+    .catch(function(e) {
+      btn.textContent = '✨ 一键更新';
+      btn.disabled = false;
+      // Fall back to regex parser
+      var extracted = extractTodosFromLongText(text);
+      if (extracted.length > 0) {
+        toast('AI 暂不可用（需 OpenRouter Key），已用本地提取');
+        showSummaryPreview(extracted);
+      } else {
+        toast('AI 调用失败。请用 OpenRouter Key（sk-or-xxx），点 ⚙️ 设置');
+      }
+    });
   }
 
   // ==================== Summary Preview Panel ====================
@@ -1488,6 +1613,7 @@ const App = (() => {
     load();
     recluster();
     render();
+    updateAiStatus();
 
     // Filter dropdown
     document.getElementById('filterSelect').addEventListener('change', e => {
@@ -1507,7 +1633,7 @@ const App = (() => {
     });
   }
 
-  return { init, syncFromThoughts, toggle, remove, openEdit, closeEdit, saveEdit, addSubTask, toggleSubTask, removeSubTask, archiveOld, clearThoughts, exportData, importData, confirmSummary, closeSummary, toggleSummaryItem, editSummaryItem, addSummaryItem };
+  return { init, syncFromThoughts, toggle, remove, openEdit, closeEdit, saveEdit, addSubTask, toggleSubTask, removeSubTask, archiveOld, clearThoughts, exportData, importData, confirmSummary, closeSummary, toggleSummaryItem, editSummaryItem, addSummaryItem, toggleSettings, saveGroqKey };
 })();
 
 document.addEventListener('DOMContentLoaded', () => App.init());
