@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><!-- v8 -->
+<meta charset="UTF-8"><!-- v9 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -556,6 +556,10 @@ body {
       <button class="sync-btn" style="padding:6px 12px;font-size:12px;white-space:nowrap;" onclick="App.saveGroqKey()">保存</button>
     </div>
     <div style="font-size:10px;color:var(--text3);margin-top:4px;">去 <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--blue);">openrouter.ai/keys</a> 免费注册获取（支持 Google 登录）</div>
+    <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
+      <button class="sync-btn" style="padding:6px 12px;font-size:11px;" onclick="App.testAi()">🔬 测试连接</button>
+    </div>
+    <div id="aiTestResult" style="display:none;margin-top:6px;"></div>
   </div>
 
   <!-- Todo List -->
@@ -1119,13 +1123,13 @@ const App = (() => {
 
   function saveGroqKey() {
     var key = document.getElementById('groqKey').value.trim();
-    if (key && (key.startsWith('sk-or-') || key.startsWith('gsk_'))) {
+    if (key && key.length > 10) {
       localStorage.setItem('groq-key', key);
       document.getElementById('settingsPanel').style.display = 'none';
       updateAiStatus();
       toast('✅ AI Key 已保存');
     } else {
-      toast('Key 格式错误，应以 sk-or- 或 gsk_ 开头');
+      toast('Key 太短，请检查');
     }
   }
 
@@ -1156,19 +1160,11 @@ const App = (() => {
     btn.textContent = '🤔 AI 总结中...';
     btn.disabled = true;
 
-    // OpenRouter (supports CORS) or Groq direct
-    var url = key.startsWith('sk-or-')
-      ? 'https://openrouter.ai/api/v1/chat/completions'
-      : 'https://api.groq.com/openai/v1/chat/completions';
-    var model = key.startsWith('sk-or-')
-      ? 'google/gemini-2.0-flash-exp:free'
-      : 'llama-3.1-8b-instant';
-
-    fetch(url, {
+    fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
       body: JSON.stringify({
-        model: model,
+        model: 'openai/gpt-4o-mini',
         messages: [
           { role: 'system', content: '你是一个待办提取工具。从用户输入的混乱文本中提取可执行的待办事项。只返回一个JSON数组，每项有title（简短标题，15字内）和estimatedMinutes（预估分钟数，默认30）字段。不要返回任何其他内容。' },
           { role: 'user', content: text }
@@ -1177,36 +1173,87 @@ const App = (() => {
         max_tokens: 1024
       })
     })
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+      if (!r.ok) {
+        return r.text().then(function(body) {
+          // Show raw error on screen
+          var msg = 'HTTP ' + r.status + ': ' + body.slice(0, 120);
+          document.getElementById('aiTestResult').textContent = msg;
+          document.getElementById('aiTestResult').style.display = 'block';
+          throw new Error(msg);
+        });
+      }
+      return r.json();
+    })
     .then(function(data) {
       btn.textContent = '✨ 一键更新';
       btn.disabled = false;
+      document.getElementById('aiTestResult').style.display = 'none';
       var content = data.choices && data.choices[0] && data.choices[0].message.content;
-      if (!content) { toast('AI 未返回结果'); return; }
+      if (!content) { toast('AI 未返回 content，查看下方调试区'); document.getElementById('aiTestResult').textContent = JSON.stringify(data).slice(0,300); document.getElementById('aiTestResult').style.display = 'block'; return; }
       try {
-        // Extract JSON array from response
         var jsonStr = content.match(/\[[\s\S]*\]/);
-        if (!jsonStr) { toast('AI 返回格式异常'); return; }
+        if (!jsonStr) { toast('返回非 JSON 格式，查看调试区'); document.getElementById('aiTestResult').textContent = content.slice(0,300); document.getElementById('aiTestResult').style.display = 'block'; return; }
         var todos = JSON.parse(jsonStr[0]);
         if (!todos.length) { toast('未提取到待办项'); return; }
         showSummaryPreview(todos.map(function(t) {
           return { title: t.title, estimatedMinutes: t.estimatedMinutes || 30, category: 'other', subTasks: [], note: '' };
         }));
       } catch(e) {
-        toast('AI 返回解析失败，请重试');
+        toast('解析失败，查看调试区');
+        document.getElementById('aiTestResult').textContent = content.slice(0,300);
+        document.getElementById('aiTestResult').style.display = 'block';
       }
     })
     .catch(function(e) {
       btn.textContent = '✨ 一键更新';
       btn.disabled = false;
-      // Fall back to regex parser
+      // Fallback
       var extracted = extractTodosFromLongText(text);
-      if (extracted.length > 0) {
-        toast('AI 暂不可用（需 OpenRouter Key），已用本地提取');
-        showSummaryPreview(extracted);
-      } else {
-        toast('AI 调用失败。请用 OpenRouter Key（sk-or-xxx），点 ⚙️ 设置');
+      if (extracted.length === 0) {
+        extracted = [{ title: optimizeTitle(text), estimatedMinutes: 30, category: 'other', subTasks: [], note: '' }];
       }
+      showSummaryPreview(extracted);
+    });
+  }
+
+  // Test button: sends "hello" and shows raw response
+  function testAi() {
+    var key = localStorage.getItem('groq-key');
+    if (!key) { toast('请先在 ⚙️ 设置 OpenRouter Key'); return; }
+    var result = document.getElementById('aiTestResult');
+    result.textContent = '⏳ 测试中...';
+    result.style.display = 'block';
+    result.style.background = 'var(--card)';
+    result.style.padding = '10px';
+    result.style.borderRadius = '8px';
+    result.style.fontSize = '11px';
+    result.style.fontFamily = 'monospace';
+    result.style.whiteSpace = 'pre-wrap';
+    result.style.wordBreak = 'break-all';
+    result.style.maxHeight = '200px';
+    result.style.overflow = 'auto';
+
+    fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: [{ role: 'user', content: 'hello' }],
+        max_tokens: 10
+      })
+    })
+    .then(function(r) {
+      var status = r.status;
+      return r.text().then(function(body) {
+        result.textContent = 'HTTP ' + status + '\n' + body;
+        if (status === 200) result.style.background = '#e6ffe6';
+        else result.style.background = '#ffe6e6';
+      });
+    })
+    .catch(function(e) {
+      result.textContent = 'NETWORK ERROR: ' + e.message;
+      result.style.background = '#ffe6e6';
     });
   }
 
@@ -1633,7 +1680,7 @@ const App = (() => {
     });
   }
 
-  return { init, syncFromThoughts, toggle, remove, openEdit, closeEdit, saveEdit, addSubTask, toggleSubTask, removeSubTask, archiveOld, clearThoughts, exportData, importData, confirmSummary, closeSummary, toggleSummaryItem, editSummaryItem, addSummaryItem, toggleSettings, saveGroqKey };
+  return { init, syncFromThoughts, toggle, remove, openEdit, closeEdit, saveEdit, addSubTask, toggleSubTask, removeSubTask, archiveOld, clearThoughts, exportData, importData, confirmSummary, closeSummary, toggleSummaryItem, editSummaryItem, addSummaryItem, toggleSettings, saveGroqKey, testAi };
 })();
 
 document.addEventListener('DOMContentLoaded', () => App.init());

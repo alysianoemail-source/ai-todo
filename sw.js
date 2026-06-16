@@ -1,5 +1,5 @@
 // Service Worker for AI Todo PWA
-const CACHE = 'ai-todo-v4';
+const CACHE = 'ai-todo-v5';
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -26,10 +26,15 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Only cache local static assets, skip external API calls
+  var url = new URL(e.request.url);
+  if (url.hostname !== self.location.hostname) return;
+  if (e.request.method !== 'GET') return;
+
   e.respondWith(
     caches.match(e.request).then(cached =>
       cached || fetch(e.request).then(resp => {
-        const clone = resp.clone();
+        var clone = resp.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
         return resp;
       })
