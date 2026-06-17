@@ -1298,9 +1298,9 @@ const App = (() => {
 
     closeSummary();
     document.getElementById('thoughtInput').value = '';
-    try { recluster(); } catch(e) {}
-    try { save(); } catch(e) {}
-    try { render(); } catch(e) {}
+    recluster();
+    save();
+    render();
     if (added > 0) toast('✅ 已加入 ' + added + ' 条待办');
     else toast('⚠️ 无效或已存在，未新增');
   }
