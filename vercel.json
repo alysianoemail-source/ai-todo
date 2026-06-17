@@ -7,5 +7,11 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/chat.js": {
+      "memory": 128,
+      "maxDuration": 10
+    }
+  }
 }
