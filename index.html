@@ -524,13 +524,6 @@ body {
   .tag-dynamic { font-size: 12px; padding: 3px 10px; }
 }
 </style>
-<script type="importmap">
-{
-  "imports": {
-    "@google/generative-ai": "https://esm.run/@google/generative-ai"
-  }
-}
-</script>
 </head>
 <body>
 
@@ -559,10 +552,10 @@ body {
       <span id="aiStatus" style="font-size:11px;color:var(--text3);">未设置</span>
     </div>
     <div style="display:flex;gap:6px;">
-      <input id="groqKey" type="password" placeholder="输入 Gemini API Key" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:monospace;">
+      <input id="groqKey" type="password" placeholder="输入 DeepSeek API Key（sk-xxx）" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:monospace;">
       <button class="sync-btn" style="padding:6px 12px;font-size:12px;white-space:nowrap;" onclick="App.saveGroqKey()">保存</button>
     </div>
-    <div style="font-size:10px;color:var(--text3);margin-top:4px;">去 <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--blue);">aistudio.google.com/apikey</a> 免费获取（完全免费，浏览器直连）</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px;">去 <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--blue);">platform.deepseek.com</a> 免费注册获取（浏览器直连，¥1/百万token）</div>
     <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
       <button class="sync-btn" style="padding:6px 12px;font-size:11px;" onclick="App.testAi()">🔬 测试连接</button>
     </div>
@@ -1009,7 +1002,7 @@ const App = (() => {
 
     // Long text (>25 chars) → AI extraction
     if (input.length >= 25) {
-      var key = localStorage.getItem('gemini-key');
+      var key = localStorage.getItem('ai-key');
       if (key) {
         aiExtractTodos(input, key);
         return;
@@ -1119,15 +1112,13 @@ const App = (() => {
     toast(msg + merge + skip || '列表已是最新');
   }
 
-  // ==================== AI Model (Gemini) ====================
-
-  let genAI = null;
+  // ==================== AI Model (DeepSeek) ====================
 
   function toggleSettings() {
     var panel = document.getElementById('settingsPanel');
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
     if (panel.style.display === 'block') {
-      var key = localStorage.getItem('gemini-key');
+      var key = localStorage.getItem('ai-key');
       if (key) document.getElementById('groqKey').value = key;
       updateAiStatus();
     }
@@ -1136,83 +1127,56 @@ const App = (() => {
   function saveGroqKey() {
     var key = document.getElementById('groqKey').value.trim();
     if (key && key.length > 10) {
-      localStorage.setItem('gemini-key', key);
-      initGemini(key);
+      localStorage.setItem('ai-key', key);
       document.getElementById('settingsPanel').style.display = 'none';
-      toast('✅ Gemini Key 已保存');
+      updateAiStatus();
+      toast('✅ Key 已保存');
     } else {
-      toast('Key 太短，请检查');
+      toast('Key 太短');
     }
-  }
-
-  function initGemini(key) {
-    try {
-      var GoogleGenAI = window.GoogleGenAI || (window.google && window.google.genAI) || null;
-      if (!GoogleGenAI && typeof import === 'function') {
-        import('@google/generative-ai').then(function(mod) {
-          genAI = new mod.GoogleGenerativeAI(key);
-          updateAiStatus();
-        }).catch(function() {
-          genAI = null;
-          updateAiStatus();
-        });
-      } else if (typeof GoogleGenerativeAI !== 'undefined') {
-        genAI = new GoogleGenerativeAI(key);
-        updateAiStatus();
-      }
-    } catch(e) {
-      genAI = null;
-    }
-    updateAiStatus();
   }
 
   function updateAiStatus() {
-    var key = localStorage.getItem('gemini-key');
+    var key = localStorage.getItem('ai-key');
     var el = document.getElementById('aiStatus');
     var label = document.getElementById('aiLabel');
-    if (genAI && key) {
-      el.textContent = 'Gemini 已就绪 ✓';
+    if (key) {
+      el.textContent = '已就绪 ✓';
       el.style.color = 'var(--green)';
-      label.textContent = '🧠 AI 增强模式 (Gemini)';
+      label.textContent = '🧠 AI 增强模式 (DeepSeek)';
       label.style.color = 'var(--green)';
-    } else if (key) {
-      el.textContent = '加载中...';
-      el.style.color = 'var(--amber)';
-      label.textContent = '⏳ Gemini 初始化中';
-      label.style.color = 'var(--amber)';
     } else {
       el.textContent = '未设置';
       el.style.color = 'var(--text3)';
-      label.textContent = '💡 设 Gemini Key 后自动总结长文';
+      label.textContent = '💡 设 DeepSeek Key 后自动总结';
       label.style.color = 'var(--text3)';
     }
   }
 
   function aiExtractTodos(text, key) {
     var btn = document.getElementById('syncBtn');
-    btn.textContent = '🤔 Gemini 总结中...';
+    btn.textContent = '🤔 AI 总结中...';
     btn.disabled = true;
 
-    if (!genAI) {
-      toast('Gemini SDK 未加载，请刷新页面');
+    fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: '你是待办提取工具。从混乱文本中提取可执行待办。只返回JSON数组：[{"title":"简短标题","estimatedMinutes":30}]。不要其他内容。' },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.3,
+        max_tokens: 1024
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
       btn.textContent = '✨ 一键更新';
       btn.disabled = false;
-      fallbackExtract(text);
-      return;
-    }
-
-    var model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-    model.generateContent(
-      '你是一个待办提取工具。从以下混乱文本中提取可执行的待办事项。\n' +
-      '只返回一个JSON数组，每项有title（简短标题，15字内）和estimatedMinutes（预估分钟数，默认30）。\n' +
-      '不要返回任何其他内容。\n\n' +
-      '用户输入：\n' + text
-    )
-    .then(function(result) {
-      btn.textContent = '✨ 一键更新';
-      btn.disabled = false;
-      var content = result.response.text();
-      if (!content) { toast('Gemini 返回为空'); fallbackExtract(text); return; }
+      var content = data.choices && data.choices[0] && data.choices[0].message.content;
+      if (!content) { toast('AI 返回为空'); fallbackExtract(text); return; }
       try {
         var jsonStr = content.match(/\[[\s\S]*\]/);
         if (!jsonStr) { toast('格式异常，已用本地提取'); fallbackExtract(text); return; }
@@ -1229,7 +1193,7 @@ const App = (() => {
     .catch(function(e) {
       btn.textContent = '✨ 一键更新';
       btn.disabled = false;
-      toast('❌ ' + (e.message || 'Gemini 调用失败'));
+      toast('❌ ' + (e.message || '调用失败'));
       fallbackExtract(text);
     });
   }
@@ -1243,8 +1207,8 @@ const App = (() => {
   }
 
   function testAi() {
-    var key = localStorage.getItem('gemini-key');
-    if (!key) { toast('请先保存 Gemini Key'); return; }
+    var key = localStorage.getItem('ai-key');
+    if (!key) { toast('请先保存 Key'); return; }
     var result = document.getElementById('aiTestResult');
     result.textContent = '⏳ 测试中...';
     result.style.display = 'block';
@@ -1258,31 +1222,30 @@ const App = (() => {
     result.style.maxHeight = '200px';
     result.style.overflow = 'auto';
 
-    if (!genAI) {
-      // Try lazy init
-      import('@google/generative-ai').then(function(mod) {
-        genAI = new mod.GoogleGenerativeAI(key);
-        doTest(key, result);
-      }).catch(function(e) {
-        result.textContent = 'SDK 加载失败: ' + e.message;
-        result.style.background = '#ffe6e6';
-      });
-    } else {
-      doTest(key, result);
-    }
-  }
-
-  function doTest(key, result) {
-    genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-      .generateContent('Say hello in one word')
-      .then(function(r) {
-        result.textContent = '✅ Gemini 连接成功！\n回复: ' + r.response.text();
-        result.style.background = '#e6ffe6';
+    fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [{ role: 'user', content: '你好' }],
+        max_tokens: 10
       })
-      .catch(function(e) {
-        result.textContent = '❌ 错误: ' + (e.message || JSON.stringify(e));
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var text = data.choices && data.choices[0] && data.choices[0].message.content;
+      if (text) {
+        result.textContent = '✅ 连接成功！\n回复: ' + text;
+        result.style.background = '#e6ffe6';
+      } else {
+        result.textContent = '❌ 返回为空\n' + JSON.stringify(data).slice(0, 300);
         result.style.background = '#ffe6e6';
-      });
+      }
+    })
+    .catch(function(e) {
+      result.textContent = '❌ ' + (e.message || '网络错误');
+      result.style.background = '#ffe6e6';
+    });
   }
 
   // ==================== Summary Preview Panel ====================
@@ -1689,8 +1652,6 @@ const App = (() => {
     recluster();
     render();
     updateAiStatus();
-    var key = localStorage.getItem('gemini-key');
-    if (key) initGemini(key);
 
     // Filter dropdown
     document.getElementById('filterSelect').addEventListener('change', e => {
