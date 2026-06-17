@@ -1301,8 +1301,8 @@ const App = (() => {
     try { recluster(); } catch(e) {}
     try { save(); } catch(e) {}
     try { render(); } catch(e) {}
-    toast('✅ 已加入 ' + added + ' 条待办');
-    if (added === 0) toast('⚠️ 所有条目已存在或无效，未新增');
+    if (added > 0) toast('✅ 已加入 ' + added + ' 条待办');
+    else toast('⚠️ 无效或已存在，未新增');
   }
 
   function closeSummary() {
