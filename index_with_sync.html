@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><!-- v10 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f6ef7">
+<title>AI Todo · 智能待办</title>
+<style>
+:root {
+  --bg: #f7f8fa;
+  --card: #fff;
+  --border: #e8ecf1;
+  --text: #1e2330;
+  --text2: #6b7280;
+  --text3: #9ca3af;
+  --blue: #4f6ef7;
+  --blue-bg: #eef1ff;
+  --green: #22c55e;
+  --green-bg: #e6f9ef;
+  --amber: #f59e0b;
+  --amber-bg: #fff8e6;
+  --red: #ef4444;
+  --red-bg: #fef2f2;
+  --purple: #8b5cf6;
+  --purple-bg: #f5f3ff;
+  --teal: #14b8a6;
+  --teal-bg: #e6faf7;
+  --pink: #ec4899;
+  --pink-bg: #fdf2f8;
+  --gray: #6b7280;
+  --gray-bg: #f3f4f6;
+  --radius: 10px;
+  --radius-sm: 7px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.app {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left { display: flex; align-items: center; gap: 8px; }
+.header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+.header-stats { display: flex; gap: 16px; font-size: 13px; color: var(--text2); }
+.stat-num { font-weight: 700; font-size: 15px; color: var(--text); }
+.stat-done .stat-num { color: var(--green); }
+.header-actions { display: flex; gap: 6px; }
+
+.icon-btn {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.15s;
+}
+.icon-btn:hover { background: var(--bg); }
+
+.todo-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.todo-section-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.todo-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+  min-width: 100px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+.filter-select:focus { border-color: var(--blue); }
+
+.todo-list { padding: 6px 12px; max-height: 56vh; overflow-y: auto; }
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: var(--radius-sm);
+  transition: 0.15s;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.todo-item:hover { background: var(--bg); }
+.todo-item + .todo-item { border-top: 1px solid var(--border); }
+
+.checkbox {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 2px solid #d1d5db;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.15s;
+  font-size: 13px;
+  color: transparent;
+}
+.todo-item:hover .checkbox { border-color: var(--blue); }
+.todo-item.done .checkbox { background: var(--green); border-color: var(--green); color: #fff; }
+.todo-item.done .todo-text { text-decoration: line-through; color: var(--text3); }
+.todo-item.done .todo-meta { opacity: 0.4; }
+
+.todo-body { flex: 1; min-width: 0; }
+
+.todo-text {
+  font-size: 14px;
+  font-weight: 500;
+  word-break: break-word;
+  line-height: 1.4;
+  cursor: text;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: 0.1s;
+}
+.todo-text:hover { background: var(--blue-bg); }
+
+.todo-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tag { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.tag-dynamic { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+
+.priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.priority-dot.high { background: var(--red); }
+.priority-dot.medium { background: var(--amber); }
+.priority-dot.low { background: var(--green); }
+
+.time-tag { font-size: 11px; color: var(--text3); }
+
+.todo-actions { display: flex; gap: 2px; opacity: 0; transition: 0.15s; }
+.todo-item:hover .todo-actions { opacity: 1; }
+
+.mini-btn {
+  width: 26px; height: 26px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.15s;
+}
+.mini-btn:hover { background: var(--bg); }
+.mini-btn.del:hover { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+
+.empty-list { text-align: center; padding: 48px 20px; color: var(--text3); }
+.empty-list .empty-icon { font-size: 36px; margin-bottom: 8px; opacity: 0.6; }
+
+.sync-bar { display: flex; align-items: center; gap: 12px; }
+.sync-line { flex: 1; height: 1px; background: var(--border); }
+
+.sync-btn {
+  padding: 10px 28px;
+  border-radius: 24px;
+  border: none;
+  background: var(--text);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+.sync-btn:hover { background: #000; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.sync-btn:active { transform: translateY(0); }
+
+.input-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.input-header {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input-body { padding: 14px; }
+
+#thoughtInput {
+  width: 100%;
+  min-height: 180px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.8;
+  color: var(--text);
+  resize: vertical;
+  background: transparent;
+}
+#thoughtInput::placeholder { color: var(--text3); }
+
+.input-footer {
+  padding: 0 14px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.input-hint { font-size: 11px; color: var(--text3); }
+.input-actions { display: flex; gap: 6px; }
+
+.btn-ghost {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text2);
+  transition: 0.15s;
+}
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+.btn-ghost.danger:hover { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e2330;
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 13px;
+  z-index: 100;
+  animation: toastIn 0.2s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; animation: fadeIn 0.15s;
+}
+@keyframes fadeIn { from { opacity: 0; } }
+
+.edit-drawer {
+  background: var(--card); border-radius: var(--radius);
+  width: 460px; max-width: 94vw; max-height: 85vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+  animation: slideUp 0.2s;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } }
+
+.edit-drawer-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.edit-drawer-header h3 { font-size: 16px; }
+
+.edit-drawer-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+.edit-drawer-body .form-group { margin-bottom: 14px; }
+.edit-drawer-body label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+.edit-drawer-body input,
+.edit-drawer-body select,
+.edit-drawer-body textarea {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-size: 13px; font-family: inherit; outline: none;
+  background: var(--bg); color: var(--text); transition: 0.15s;
+}
+.edit-drawer-body input:focus,
+.edit-drawer-body select:focus,
+.edit-drawer-body textarea:focus { border-color: var(--blue); background: var(--card); }
+.edit-drawer-body .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.edit-drawer-footer {
+  padding: 12px 20px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+
+.subtask-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.subtask-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 5px; background: var(--bg); font-size: 13px; }
+.subtask-item .sub-check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: 0.15s; }
+.subtask-item.done .sub-check { background: var(--green); border-color: var(--green); color: #fff; }
+.subtask-item.done .sub-text { text-decoration: line-through; color: var(--text3); }
+.subtask-item .sub-text { flex: 1; }
+.subtask-item .sub-del { width: 20px; height: 20px; border-radius: 4px; border: none; background: transparent; cursor: pointer; font-size: 14px; color: var(--text3); display: flex; align-items: center; justify-content: center; }
+.subtask-item .sub-del:hover { background: var(--red-bg); color: var(--red); }
+.subtask-add { display: flex; gap: 6px; }
+.subtask-add input { flex: 1; }
+
+.summary-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; background: var(--bg); margin-bottom: 6px; }
+.summary-check input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--blue); }
+.summary-input { flex: 1; padding: 5px 8px; border: 1px solid transparent; border-radius: 4px; font-size: 13px; font-family: inherit; background: transparent; outline: none; color: var(--text); }
+.summary-input:focus { border-color: var(--blue); background: var(--card); }
+.summary-time { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.sub-badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; background: var(--bg); color: var(--text3); }
+
+@media (max-width: 600px) {
+  .app { padding: 12px 10px 32px; gap: 12px; }
+  .checkbox { width: 26px; height: 26px; }
+  .todo-item { padding: 14px 10px; }
+  .mini-btn { width: 32px; height: 32px; font-size: 16px; }
+  .icon-btn { width: 36px; height: 36px; }
+  .sync-btn { padding: 12px 20px; font-size: 14px; }
+  .btn-ghost { padding: 8px 16px; font-size: 13px; }
+  .filter-select { padding: 8px 28px 8px 12px; font-size: 14px; }
+  .edit-drawer { width: 100%; max-width: 100%; max-height: 100vh; border-radius: 16px 16px 0 0; position: fixed; bottom: 0; left: 0; right: 0; animation: slideUpMobile 0.2s; }
+  @keyframes slideUpMobile { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .edit-drawer-body { max-height: 55vh; -webkit-overflow-scrolling: touch; }
+  .modal-overlay { align-items: flex-end; }
+  #thoughtInput { min-height: 140px; font-size: 16px; }
+  .input-hint { font-size: 12px; }
+  .header-stats { display: none; }
+  .todo-section-header { flex-direction: column; align-items: stretch; gap: 8px; }
+  .todo-list { max-height: 45vh; }
+  .todo-text { font-size: 15px; }
+  .tag-dynamic { font-size: 12px; padding: 3px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <span style="font-size:22px;">✓</span>
+      <h1>Todo</h1>
+    </div>
+    <div class="header-stats">
+      <span><span class="stat-num" id="statPending">0</span> 待办</span>
+      <span class="stat-done"><span class="stat-num" id="statDone">0</span> 完成</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="App.toggleSettings()" title="设置AI模型">⚙️</button>
+      <button class="icon-btn" onclick="App.exportData()" title="导出JSON">📤</button>
+      <button class="icon-btn" onclick="App.importData()" title="导入JSON">📥</button>
+    </div>
+  </div>
+
+  <div id="settingsPanel" style="display:none;background:var(--card);border-radius:10px;padding:12px;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <span style="font-size:13px;font-weight:500;">🧠 AI 长文总结</span>
+      <span style="font-size:11px;color:var(--green);">DeepSeek</span>
+    </div>
+    <div style="font-size:10px;color:var(--text3);">Key 在服务器端，前端无需配置。</div>
+    <div style="margin-top:8px;">
+      <button class="sync-btn" style="padding:6px 12px;font-size:11px;" onclick="App.testAi()">🔬 测试连接</button>
+    </div>
+    <div id="aiTestResult" style="display:none;margin-top:6px;"></div>
+  </div>
+
+  <div class="todo-section">
+    <div class="todo-section-header">
+      <span class="todo-section-title">📋 待办列表</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="filterSelect" class="filter-select">
+          <option value="all">全部</option>
+        </select>
+        <button class="btn-ghost" onclick="App.archiveOld()" title="归档30天前的已完成项" style="font-size:11px;">🗄️</button>
+      </div>
+    </div>
+    <div class="todo-list" id="todoList"></div>
+  </div>
+
+  <div class="sync-bar">
+    <div class="sync-line"></div>
+    <div style="text-align:center;">
+      <button class="sync-btn" id="syncBtn" onclick="App.syncFromThoughts()">✨ 一键更新</button>
+      <div id="aiLabel" style="font-size:10px;color:var(--text3);margin-top:4px;"></div>
+    </div>
+    <div class="sync-line"></div>
+  </div>
+
+  <div class="input-section">
+    <div class="input-header">💭 瞬时想法</div>
+    <div class="input-body">
+      <textarea id="thoughtInput" placeholder="把脑袋里的东西倒出来。&#10;用逗号、分号或换行分隔，AI 自动识别成独立待办。&#10;&#10;例如：&#10;完成Q2季报分析，约理财顾问review组合&#10;读《机器学习实战》第5章；健身房练腿&#10;回复老板邮件&#10;给孩子报夏令营" rows="8"></textarea>
+    </div>
+    <div class="input-footer">
+      <span class="input-hint">Ctrl+Enter 快速更新 · 重复项自动跳过</span>
+      <div class="input-actions">
+        <button class="btn-ghost danger" onclick="App.clearThoughts()">清空输入</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:16px 0 0;font-size:11px;color:var(--text3);line-height:1.8;">
+  🤖 AI 本地运行，零 token · 数据存于本设备 · 📤📥 导出备份
+</div>
+
+<div id="toast" class="toast" style="display:none;"></div>
+
+<div class="modal-overlay" id="editPanel" style="display:none;">
+  <div class="edit-drawer">
+    <div class="edit-drawer-header">
+      <h3>✏️ 编辑任务</h3>
+      <button class="icon-btn" onclick="App.closeEdit()" style="border:none;">✕</button>
+    </div>
+    <div class="edit-drawer-body">
+      <div class="form-group">
+        <label>任务名称</label>
+        <input type="text" id="editTitle" placeholder="任务名称">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>分类</label>
+          <select id="editCategory"></select>
+        </div>
+        <div class="form-group">
+          <label>优先级</label>
+          <select id="editPriority">
+            <option value="high">🔴 高</option>
+            <option value="medium">🟡 中</option>
+            <option value="low">🟢 低</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>预计耗时（分钟）</label>
+          <input type="number" id="editDuration" min="5" step="5">
+        </div>
+        <div class="form-group">
+          <label>截止日期</label>
+          <input type="date" id="editDeadline">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <textarea id="editNote" rows="2" placeholder="补充说明..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>子任务</label>
+        <div id="subTaskList" class="subtask-list"></div>
+        <div class="subtask-add">
+          <input type="text" id="newSubTask" placeholder="添加子任务..." onkeydown="if(event.key==='Enter')App.addSubTask()">
+          <button class="btn-ghost" onclick="App.addSubTask()">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="edit-drawer-footer">
+      <button class="btn-ghost" onclick="App.closeEdit()">取消</button>
+      <button class="sync-btn" style="padding:8px 20px;font-size:13px;" onclick="App.saveEdit()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="summaryPanel" style="display:none;">
+  <div class="edit-drawer" style="max-height:90vh;">
+    <div class="edit-drawer-header">
+      <h3>🧠 AI 提取结果 — 确认后加入待办</h3>
+      <button class="icon-btn" onclick="App.closeSummary()" style="border:none;">✕</button>
+    </div>
+    <div class="edit-drawer-body" id="summaryList"></div>
+    <div class="edit-drawer-footer">
+      <button class="btn-ghost" onclick="App.closeSummary()">取消</button>
+      <button class="sync-btn" style="padding:8px 20px;font-size:13px;" onclick="App.confirmSummary()">✅ 确认加入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const App = (() => {
+
+  const STOP = new Set('的 了 在 是 我 有 和 就 不 人 都 一 一个 上 也 很 到 说 要 去 你 会 着 没有 看 好 自己 这 他 她 它 们 那 些 什么 怎么 哪 吗 吧 呢 啊 哦 嗯 但 而 与 或 为 以 所以 因为 如果 虽然 可以 应该 需要 已经 正在 将 把 被 从 让 给 对 向 关于 通过 以及 个 种 次 下 中 大 小 多 少 来 做 能 想 用 还 这个 那个 进行 the a an is are was were be been being have has had do does did will would can could may might shall should to of in on at for with by from about as into through during before after above below up down out off over under between among'.split(' '));
+
+  function tokenize(text) {
+    const result = [];
+    const raw = text.replace(/[，。！？、；：""''（）【】《》\s,.\!\?;:\(\)\[\]{}"']+/g, ' ').split(' ');
+    for (const w of raw) {
+      const t = w.trim();
+      if (!t) continue;
+      if (/^[\u4e00-\u9fff]+$/.test(t)) {
+        result.push(t);
+        if (t.length >= 2) {
+          for (let i = 0; i < t.length - 1; i++) result.push(t.slice(i, i+2));
+        }
+      } else if (t.length >= 2) {
+        result.push(t.toLowerCase());
+      }
+    }
+    return result.filter(w => w.length >= 2 && !STOP.has(w));
+  }
+
+  // ====== FIX: recluster with null-safe Object.entries ======
+  function recluster() {
+    const pending = todos.filter(t => t.status !== 'completed');
+    if (pending.length <= 1) {
+      for (const t of pending) { t.category = 'other'; t.clusterName = ''; }
+      App._clusters = [];
+      return;
+    }
+
+    const todoWords = pending.map(t => ({ id: t.id, words: tokenize(t.title) }));
+
+    const docFreq = {};
+    for (const tw of todoWords) {
+      const seen = new Set();
+      for (const w of tw.words) {
+        if (!seen.has(w)) { docFreq[w] = (docFreq[w] || 0) + 1; seen.add(w); }
+      }
+    }
+    const validWords = new Set(Object.keys(docFreq).filter(w => docFreq[w] >= 2));
+
+    const todoKeys = todoWords.map(tw => {
+      const freq = {};
+      for (const w of tw.words) {
+        if (validWords.has(w)) freq[w] = (freq[w] || 0) + 1;
+      }
+      return { id: tw.id, freq, topWords: Object.keys(freq) };
+    });
+
+    if (validWords.size === 0) {
+      for (const t of pending) { t.category = 'other'; t.clusterName = ''; }
+      App._clusters = [];
+      return;
+    }
+
+    const adj = {};
+    for (const tk of todoKeys) adj[tk.id] = [];
+
+    for (let i = 0; i < todoKeys.length; i++) {
+      for (let j = i + 1; j < todoKeys.length; j++) {
+        const a = todoKeys[i], b = todoKeys[j];
+        const shared = a.topWords.filter(w => b.freq[w]);
+        if (shared.length >= 1) {
+          adj[a.id].push(b.id);
+          adj[b.id].push(a.id);
+        }
+      }
+    }
+
+    const visited = new Set();
+    const components = [];
+
+    for (const t of pending) {
+      if (visited.has(t.id)) continue;
+      const comp = [];
+      const queue = [t.id];
+      visited.add(t.id);
+      while (queue.length) {
+        const cur = queue.shift();
+        comp.push(cur);
+        for (const nb of (adj[cur] || [])) {
+          if (!visited.has(nb)) { visited.add(nb); queue.push(nb); }
+        }
+      }
+      if (comp.length >= 2) components.push(comp);
+    }
+
+    const clusters = components.map((ids, idx) => {
+      const wordCount = {};
+      for (const id of ids) {
+        const tw = todoKeys.find(x => x.id === id);
+        // FIX: null check before iterating freq
+        if (!tw || !tw.freq || typeof tw.freq !== 'object') continue;
+        for (var w in tw.freq) {
+          if (tw.freq.hasOwnProperty(w)) wordCount[w] = (wordCount[w] || 0) + tw.freq[w];
+        }
+      }
+      // FIX: null-safe entries
+      var entries = [];
+      if (wordCount && typeof wordCount === 'object') {
+        for (var key in wordCount) {
+          if (wordCount.hasOwnProperty(key)) entries.push([key, wordCount[key]]);
+        }
+      }
+      entries.sort(function(a, b) { return b[1] - a[1]; });
+      var name = entries.slice(0, 2).map(function(x) { return x[0]; }).join('·');
+      if (!name) name = '分组' + (idx + 1);
+      const clusterId = 'c' + idx;
+      return { id: clusterId, name, ids: new Set(ids) };
+    });
+
+    const clusterMap = {};
+    for (const c of clusters) {
+      for (const id of c.ids) clusterMap[id] = c.id;
+    }
+
+    for (const t of pending) {
+      t.category = clusterMap[t.id] || 'other';
+      t.clusterName = clusterMap[t.id] ? clusters.find(c => c.id === clusterMap[t.id]).name : '';
+    }
+
+    App._clusters = clusters;
+  }
+
+  function calcUrgency(text) {
+    const hi = '紧急 立刻 马上 尽快 今天 截止 deadline urgent asap due 今晚 明天之前 马上要 最后期限 务必 必须 刻不容缓 快 赶紧 立即'.split(' ');
+    const lo = '有空 不急 以后 改天 慢慢 someday eventually 等 再说 回头 不着急 无所谓'.split(' ');
+    for (const k of hi) if (text.includes(k)) return 'high';
+    for (const k of lo) if (text.includes(k)) return 'low';
+    return 'medium';
+  }
+
+  function calcImportance(text) {
+    const hi = '重要 关键 核心 战略 重点 优先 必须 必修 必读 考核 绩效 目标 年 季度 月 汇报 评审 晋升 涨薪 大客户 关键项目 里程碑 milestone 重大 主要 首要 头等'.split(' ');
+    const lo = '顺便 无所谓 可做可不做 optional 可有可无 锦上添花'.split(' ');
+    for (const k of hi) if (text.includes(k)) return 'high';
+    for (const k of lo) if (text.includes(k)) return 'low';
+    if (text.length > 15) return 'medium';
+    return 'low';
+  }
+
+  function estimateTime(text) {
+    const patterns = [
+      [/(\d+)\s*小时/, 60], [/(\d+)\s*hour/i, 60],
+      [/(\d+)\s*分钟/, 1], [/(\d+)\s*min/i, 1],
+      [/(\d+)\s*天/, 480], [/(\d+)\s*day/i, 480],
+    ];
+    for (const [re, m] of patterns) {
+      const match = text.match(re);
+      if (match) return parseInt(match[1]) * m;
+    }
+    if (text.includes('会') || text.includes('会议')) return 60;
+    if (text.includes('报告') || text.includes('报表')) return 120;
+    if (text.includes('分析')) return 90;
+    if (text.includes('学习') || text.includes('读书') || text.includes('课程')) return 60;
+    if (text.includes('邮件') || text.includes('回复')) return 20;
+    if (text.includes('健身') || text.includes('跑步') || text.includes('运动')) return 45;
+    if (text.includes('买') || text.includes('采购')) return 30;
+    return 30;
+  }
+
+  function priorityScore(urgency, importance, min) {
+    const u = { high: 3, medium: 2, low: 1 }[urgency] || 2;
+    const i = { high: 3, medium: 2, low: 1 }[importance] || 2;
+    const base = u * 2 + i * 3;
+    const timeF = Math.max(0.4, Math.min(1.5, 45 / (min || 30)));
+    return Math.round(base * timeF * 10);
+  }
+
+  let todos = [];
+  let filter = 'all';
+
+  function save() {
+    localStorage.setItem('ai-todo-v3', JSON.stringify(todos));
+    fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(todos)
+    }).catch(() => {});
+  }
+
+  function load() {
+    try {
+      var d = localStorage.getItem('ai-todo-v3') || localStorage.getItem('ai-todo-v2');
+      todos = d ? JSON.parse(d) : [];
+    } catch (_) { todos = []; }
+    // 从云端拉最新数据
+    fetch('/api/sync')
+      .then(r => r.json())
+      .then(res => {
+        if (res.ok && res.data && res.data.length > 0) {
+          todos = res.data;
+          localStorage.setItem('ai-todo-v3', JSON.stringify(todos));
+          render();
+        }
+      })
+      .catch(() => {});
+  }
+
+  function optimizeTitle(raw) {
+    const noise = [
+      /最近想找时间/g, /找个时间/g, /抽空/g, /有空/g, /打算/g, /准备/g, /试着/g, /尝试/g,
+      /我想/g, /我要/g, /需要/g, /应该/g, /得去/g, /去一下/g, /一下的/g, /一下/g,
+      /什么的/g, /之类的/g, /那个/g, /这个/g, /有点想/g, /挺想/g, /蛮想/g,
+      /想把/g, /学一下/g, /了解一下/g, /看一下/g, /研究一下/g, /搞一下/g,
+      /嗯[啊呀哦]*/g, /对了/g, /哦/g, /就是/g, /其实/g
+    ];
+    let t = raw.trim();
+    for (const re of noise) t = t.replace(re, '');
+    t = t.replace(/\s+/g, '').trim();
+    if (t.length < 2) return raw.trim().replace(/\s+/g, '');
+    if (t.length > 15) {
+      const chunks = t.split(/[，,、；;。！？\s]+/).filter(function(c){return c.length>=2;});
+      if (chunks.length) {
+        chunks.sort(function(a,b){return (b.match(/[\u4e00-\u9fff]/g)||[]).length-(a.match(/[\u4e00-\u9fff]/g)||[]).length;});
+        t = chunks[0];
+      } else { t = t.slice(0, 12); }
+    }
+    t = t.replace(/^[的了呢吗啊呀哦]+/, '').replace(/[的了呢吗啊呀哦]+$/, '');
+    t = t.replace(/(?:的概念部分|的问题|的内容|的事情|的东西|这一块)$/, '');
+    return t || raw.trim().replace(/\s+/g, '');
+  }
+
+  function syncFromThoughts() {
+    const input = document.getElementById('thoughtInput').value.trim();
+    if (!input) return toast('请先在下方输入你的想法');
+
+    if (input.length >= 25) {
+      aiExtractTodos(input);
+      return;
+    }
+
+    const lines = input.split(/[\n，,、；;]+/).map(l => l.trim()).filter(l => l);
+    let added = 0, skipped = 0;
+    const newItems = [];
+
+    for (let line of lines) {
+      line = line.replace(/^[-*\d.)。•·]\s*/, '').trim();
+      if (!line) continue;
+      const optimized = optimizeTitle(line);
+      if (todos.some(t => t.title === optimized || t.title === line)) { skipped++; continue; }
+
+      const urg = calcUrgency(optimized);
+      const imp = calcImportance(optimized);
+      const est = estimateTime(optimized);
+      const pri = priorityScore(urg, imp, est);
+      const label = pri >= 70 ? 'high' : pri >= 40 ? 'medium' : 'low';
+
+      newItems.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        title: optimized,
+        category: 'other',
+        priority: pri,
+        priorityLabel: label,
+        urgency: urg,
+        importance: imp,
+        estimatedMinutes: est,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        subTasks: [],
+        note: ''
+      });
+      added++;
+    }
+
+    todos.push(...newItems);
+    document.getElementById('thoughtInput').value = '';
+    try { recluster(); } catch(e) { console.log('recluster', e); }
+    save();
+    try { render(); } catch(e) { console.log('render', e); }
+    const msg = added ? '✅ 新增 ' + added + ' 项' : '';
+    const skip = skipped ? '，跳过 ' + skipped + ' 项重复' : '';
+    toast(msg + skip || '列表已是最新');
+  }
+
+  function updateAiStatus() {
+    var label = document.getElementById('aiLabel');
+    label.textContent = '🧠 AI 增强模式 (DeepSeek)';
+    label.style.color = 'var(--green)';
+  }
+
+  function toggleSettings() {
+    var panel = document.getElementById('settingsPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function aiExtractTodos(text) {
+    var btn = document.getElementById('syncBtn');
+    btn.textContent = '🤔 AI 总结中...';
+    btn.disabled = true;
+
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: '你是待办提取工具。从混乱文本中提取可执行待办。只返回JSON数组：[{"title":"简短标题","estimatedMinutes":30}]。不要其他内容。' },
+          { role: 'user', content: text }
+        ]
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.textContent = '✨ 一键更新';
+      btn.disabled = false;
+      var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (!content) { toast('AI 返回为空，使用本地解析'); fallbackExtract(text); return; }
+      try {
+        var jsonStr = content.match(/\[[\s\S]*\]/);
+        if (!jsonStr) { toast('格式异常，使用本地解析'); fallbackExtract(text); return; }
+        var aiItems = JSON.parse(jsonStr[0]);
+        if (!aiItems.length) { toast('未提取到待办项'); return; }
+        showSummaryPreview(aiItems.map(function(t) {
+          return { title: t.title, estimatedMinutes: t.estimatedMinutes || 30, category: 'other', subTasks: [], note: '' };
+        }));
+      } catch(e) { toast('解析失败，使用本地解析'); fallbackExtract(text); }
+    })
+    .catch(function(e) {
+      btn.textContent = '✨ 一键更新';
+      btn.disabled = false;
+      toast('AI 调用失败，使用本地解析');
+      fallbackExtract(text);
+    });
+  }
+
+  function fallbackExtract(text) {
+    const lines = text.split(/[\n，,、；;]+/).map(l => l.trim()).filter(l => l.length >= 2);
+    const items = lines.map(function(l) {
+      return { title: optimizeTitle(l), estimatedMinutes: estimateTime(l), category: 'other', subTasks: [], note: '' };
+    }).filter(function(i) { return i.title.length >= 2; });
+    if (items.length === 0) {
+      items.push({ title: optimizeTitle(text), estimatedMinutes: 30, category: 'other', subTasks: [], note: '' });
+    }
+    showSummaryPreview(items);
+  }
+
+  function testAi() {
+    var result = document.getElementById('aiTestResult');
+    result.textContent = '⏳ 测试中...';
+    result.style.display = 'block';
+    result.style.cssText = 'display:block;margin-top:6px;background:var(--card);padding:10px;border-radius:8px;font-size:11px;font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow:auto;';
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: '你好' }], max_tokens: 10 })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (text) { result.textContent = '✅ 连接成功！\n回复: ' + text; result.style.background = '#e6ffe6'; }
+      else { result.textContent = '❌ 返回为空\n' + JSON.stringify(data).slice(0, 300); result.style.background = '#ffe6e6'; }
+    })
+    .catch(function(e) { result.textContent = '❌ ' + (e.message || '网络错误'); result.style.background = '#ffe6e6'; });
+  }
+
+  let summaryItems = [];
+
+  function showSummaryPreview(items) {
+    summaryItems = items.map((item, i) => ({ ...item, _idx: i, _checked: true, _title: item.title }));
+    const list = document.getElementById('summaryList');
+    list.innerHTML = summaryItems.map((item, i) => `
+      <div class="summary-row">
+        <label class="summary-check"><input type="checkbox" checked onchange="App.toggleSummaryItem(${i})"></label>
+        <input class="summary-input" value="${esc(item._title)}" oninput="App.editSummaryItem(${i}, this.value)" placeholder="编辑标题">
+        <span class="summary-time">${item.estimatedMinutes || 30}min</span>
+      </div>
+    `).join('') + `
+      <div class="summary-row" style="border:1px dashed var(--border);">
+        <span style="font-size:18px;color:var(--text3);cursor:pointer;" onclick="App.addSummaryItem()">+</span>
+        <span style="font-size:12px;color:var(--text3);cursor:pointer;" onclick="App.addSummaryItem()">新增一行</span>
+      </div>`;
+    document.getElementById('summaryPanel').style.display = 'flex';
+    document.getElementById('syncBtn').textContent = '✨ 一键更新';
+    document.getElementById('syncBtn').disabled = false;
+  }
+
+  function toggleSummaryItem(i) { summaryItems[i]._checked = !summaryItems[i]._checked; }
+
+  function addSummaryItem() {
+    const newIdx = summaryItems.length;
+    summaryItems.push({ title: '', _idx: newIdx, _checked: true, _title: '', estimatedMinutes: 30, category: 'other', subTasks: [], note: '' });
+    const list = document.getElementById('summaryList');
+    const newRow = document.createElement('div');
+    newRow.className = 'summary-row';
+    newRow.innerHTML = `
+      <label class="summary-check"><input type="checkbox" checked onchange="App.toggleSummaryItem(${newIdx})"></label>
+      <input class="summary-input" value="" oninput="App.editSummaryItem(${newIdx}, this.value)" placeholder="输入新待办...">
+      <span class="summary-time">30min</span>`;
+    list.insertBefore(newRow, list.lastElementChild);
+    setTimeout(() => newRow.querySelector('input[type=text]') && newRow.querySelector('input[type=text]').focus(), 100);
+  }
+
+  function editSummaryItem(i, val) { summaryItems[i]._title = val; }
+
+  // ====== FIX: confirmSummary with safe recluster/render ======
+  function confirmSummary() {
+    var selected = summaryItems.filter(function(s) { return s._checked && s._title && s._title.trim().length >= 2; });
+    if (selected.length === 0) return toast('请至少选一条');
+
+    var added = 0;
+    for (var j = 0; j < selected.length; j++) {
+      var item = selected[j];
+      var title = item._title.trim();
+      if (todos.some(function(t) { return t.title === title; })) continue;
+
+      var urg = calcUrgency(title);
+      var imp = calcImportance(title);
+      var est = item.estimatedMinutes || estimateTime(title);
+      var pri = priorityScore(urg, imp, est);
+      var label = pri >= 70 ? 'high' : pri >= 40 ? 'medium' : 'low';
+
+      todos.push({
+        id: (Date.now() + j).toString(36) + Math.random().toString(36).slice(2, 6),
+        title: title,
+        category: item.category || 'other',
+        priority: pri,
+        priorityLabel: label,
+        urgency: urg,
+        importance: imp,
+        estimatedMinutes: est,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        subTasks: [],
+        note: item.note || ''
+      });
+      added++;
+    }
+
+    closeSummary();
+    document.getElementById('thoughtInput').value = '';
+    try { recluster(); } catch(e) { console.log('recluster', e); }
+    save();
+    try { render(); } catch(e) { console.log('render', e); }
+    toast(added > 0 ? '✅ 已加入 ' + added + ' 条待办' : '⚠️ 无效或已存在，未新增');
+  }
+
+  function closeSummary() { document.getElementById('summaryPanel').style.display = 'none'; summaryItems = []; }
+
+  function commonPrefix(a, b) { let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++; return a.slice(0, i); }
+
+  function toggle(id) {
+    const t = todos.find(t => t.id === id);
+    if (!t) return;
+    t.status = t.status === 'completed' ? 'pending' : 'completed';
+    t.completedAt = t.status === 'completed' ? new Date().toISOString() : null;
+    save(); render();
+  }
+
+  function remove(id) {
+    todos = todos.filter(t => t.id !== id);
+    save(); render(); toast('已删除');
+  }
+
+  function clearDone() {
+    const before = todos.length;
+    todos = todos.filter(t => t.status !== 'completed');
+    save(); render();
+    if (todos.length < before) toast('已清除完成项');
+  }
+
+  let editingId = null;
+
+  function openEdit(id) {
+    const t = todos.find(t => t.id === id);
+    if (!t) return;
+    editingId = id;
+    document.getElementById('editTitle').value = t.title;
+    document.getElementById('editPriority').value = t.priorityLabel || 'medium';
+    document.getElementById('editDuration').value = t.estimatedMinutes || 30;
+    document.getElementById('editDeadline').value = t.deadline || '';
+    document.getElementById('editNote').value = t.note || '';
+    const catSelect = document.getElementById('editCategory');
+    const activeClusters = App._clusters || [];
+    catSelect.innerHTML = activeClusters.map(c => `<option value="${c.id}" ${t.category === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
+    catSelect.innerHTML += `<option value="other" ${t.category === 'other' ? 'selected' : ''}>（无分组）</option>`;
+    renderSubTasks(t);
+    document.getElementById('editPanel').style.display = 'flex';
+  }
+
+  function closeEdit() { document.getElementById('editPanel').style.display = 'none'; editingId = null; }
+
+  function saveEdit() {
+    const t = todos.find(t => t.id === editingId);
+    if (!t) return;
+    t.title = document.getElementById('editTitle').value.trim() || t.title;
+    t.category = document.getElementById('editCategory').value;
+    t.priorityLabel = document.getElementById('editPriority').value;
+    t.urgency = t.priorityLabel;
+    t.estimatedMinutes = parseInt(document.getElementById('editDuration').value) || 30;
+    t.deadline = document.getElementById('editDeadline').value || null;
+    t.note = document.getElementById('editNote').value.trim();
+    t.priority = priorityScore(t.urgency, t.importance, t.estimatedMinutes);
+    closeEdit(); save(); render(); toast('已保存');
+  }
+
+  function renderSubTasks(t) {
+    const list = document.getElementById('subTaskList');
+    if (!t.subTasks || t.subTasks.length === 0) {
+      list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 0;">暂无子任务</div>';
+    } else {
+      list.innerHTML = t.subTasks.map((st, i) => `
+        <div class="subtask-item ${st.done ? 'done' : ''}">
+          <div class="sub-check" onclick="App.toggleSubTask(${i})">${st.done ? '✓' : ''}</div>
+          <span class="sub-text">${esc(st.title)}</span>
+          <button class="sub-del" onclick="App.removeSubTask(${i})">✕</button>
+        </div>`).join('');
+    }
+  }
+
+  function addSubTask() {
+    const input = document.getElementById('newSubTask');
+    const val = input.value.trim();
+    if (!val) return;
+    const t = todos.find(t => t.id === editingId);
+    if (!t) return;
+    if (!t.subTasks) t.subTasks = [];
+    t.subTasks.push({ id: Date.now().toString(36), title: val, done: false });
+    input.value = '';
+    renderSubTasks(t);
+  }
+
+  function toggleSubTask(idx) {
+    const t = todos.find(t => t.id === editingId);
+    if (!t || !t.subTasks) return;
+    t.subTasks[idx].done = !t.subTasks[idx].done;
+    renderSubTasks(t);
+  }
+
+  function removeSubTask(idx) {
+    const t = todos.find(t => t.id === editingId);
+    if (!t || !t.subTasks) return;
+    t.subTasks.splice(idx, 1);
+    renderSubTasks(t);
+  }
+
+  function clearThoughts() { document.getElementById('thoughtInput').value = ''; toast('已清空'); }
+
+  function archiveOld() {
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const toArchive = todos.filter(t => t.status === 'completed' && new Date(t.completedAt || t.createdAt).getTime() < cutoff);
+    if (toArchive.length === 0) return toast('没有需要归档的旧任务');
+    if (!confirm('归档 ' + toArchive.length + ' 条30天前完成的任务？')) return;
+    todos = todos.filter(t => !toArchive.includes(t));
+    save(); render(); toast('已归档 ' + toArchive.length + ' 条');
+  }
+
+  function exportData() {
+    const data = JSON.stringify(todos, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ai-todo-' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(data).then(function() { toast('📤 已导出 + 已复制到剪贴板'); }).catch(function() { toast('📤 已导出'); });
+    } else { toast('📤 已导出'); }
+  }
+
+  function importData() {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.json';
+    input.onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        try {
+          const d = JSON.parse(ev.target.result);
+          if (!Array.isArray(d)) throw 0;
+          if (!confirm('将导入 ' + d.length + ' 项，覆盖当前数据？')) return;
+          todos = d; save(); render(); toast('已导入 ' + d.length + ' 项');
+        } catch (_) { toast('文件格式错误'); }
+      };
+      r.readAsText(f);
+    };
+    input.click();
+  }
+
+  function render() {
+    const done = todos.filter(t => t.status === 'completed').length;
+    const pending = todos.length - done;
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statDone').textContent = done;
+
+    const palette = ['#4f6ef7','#22c55e','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#ec4899','#f97316','#06b6d4','#84cc16'];
+    const paletteBg = ['#eef1ff','#e6f9ef','#fff8e6','#fef2f2','#f5f3ff','#e6faf7','#fdf2f8','#fff7ed','#ecfeff','#f7fee7'];
+
+    const activeClusters = App._clusters || [];
+    const clusterLookup = {};
+    activeClusters.forEach((c, i) => { clusterLookup[c.id] = { ...c, ci: i % palette.length }; });
+
+    function selfTag(todo) {
+      const words = tokenize(todo.title).filter(w => w.length >= 2);
+      if (words.length === 0) return '待办';
+      return words[0].length > 4 ? words[0].slice(0, 4) : words[0];
+    }
+
+    const select = document.getElementById('filterSelect');
+    const currentFilter = filter;
+    let opts = '<option value="all">📋 全部 (' + pending + ')</option>';
+    activeClusters.forEach((c, i) => {
+      const count = todos.filter(t => t.category === c.id && t.status !== 'completed').length;
+      opts += '<option value="' + c.id + '">' + c.name + ' (' + count + ')</option>';
+    });
+    const unclustered = todos.filter(t => t.category === 'other' && t.status !== 'completed');
+    if (unclustered.length > 0 && activeClusters.length > 0) opts += '<option value="other">未分组 (' + unclustered.length + ')</option>';
+    if (done > 0) opts += '<option value="done">✅ 已完成 (' + done + ')</option>';
+    select.innerHTML = opts;
+    select.value = currentFilter;
+
+    let filtered;
+    if (filter === 'all') filtered = [...todos];
+    else if (filter === 'done') filtered = todos.filter(t => t.status === 'completed');
+    else filtered = todos.filter(t => t.category === filter);
+
+    filtered.sort((a, b) => {
+      if (a.status === 'completed' && b.status !== 'completed') return 1;
+      if (a.status !== 'completed' && b.status === 'completed') return -1;
+      return (b.priority || 0) - (a.priority || 0);
+    });
+
+    const list = document.getElementById('todoList');
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty-list"><div class="empty-icon">📝</div><div>暂无待办，在下方输入你的想法吧</div></div>';
+    } else {
+      list.innerHTML = filtered.map(t => {
+        let tagHTML = '';
+        const cl = clusterLookup[t.category];
+        if (cl) {
+          tagHTML = '<span class="tag-dynamic" style="background:' + paletteBg[cl.ci] + ';color:' + palette[cl.ci] + '">' + cl.name + '</span>';
+        } else {
+          const tag = selfTag(t);
+          const ci = Math.abs(hashStr(tag)) % palette.length;
+          tagHTML = '<span class="tag-dynamic" style="background:' + paletteBg[ci] + ';color:' + palette[ci] + '">' + tag + '</span>';
+        }
+        return '<div class="todo-item ' + (t.status === 'completed' ? 'done' : '') + '">' +
+          '<div class="checkbox" onclick="App.toggle(\'' + t.id + '\')">' + (t.status === 'completed' ? '✓' : '') + '</div>' +
+          '<div class="todo-body">' +
+            '<div class="todo-text" onclick="App.openEdit(\'' + t.id + '\')" title="点击编辑">' + esc(t.title) + (t.subTasks && t.subTasks.length ? ' <span class="sub-badge">' + t.subTasks.filter(s=>s.done).length + '/' + t.subTasks.length + '</span>' : '') + '</div>' +
+            '<div class="todo-meta">' + tagHTML + '<span class="priority-dot ' + (t.priorityLabel||'medium') + '"></span><span class="time-tag">' + (t.estimatedMinutes||30) + 'min</span></div>' +
+          '</div>' +
+          '<div class="todo-actions"><button class="mini-btn del" onclick="event.stopPropagation();App.remove(\'' + t.id + '\')">✕</button></div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0; return Math.abs(h); }
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.display = 'block'; clearTimeout(el._t); el._t = setTimeout(() => el.style.display = 'none', 2200); }
+
+  function init() {
+    load();
+    try { recluster(); } catch(e) {}
+    try { render(); } catch(e) {}
+    updateAiStatus();
+    document.getElementById('filterSelect').addEventListener('change', e => { filter = e.target.value; render(); });
+    document.getElementById('editPanel').addEventListener('click', e => { if (e.target === document.getElementById('editPanel')) closeEdit(); });
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); syncFromThoughts(); }
+      if (e.key === 'Escape') { closeEdit(); closeSummary(); }
+    });
+  }
+
+  return { init, syncFromThoughts, toggle, remove, openEdit, closeEdit, saveEdit, addSubTask, toggleSubTask, removeSubTask, archiveOld, clearThoughts, exportData, importData, confirmSummary, closeSummary, toggleSummaryItem, editSummaryItem, addSummaryItem, toggleSettings, testAi };
+})();
+
+document.addEventListener('DOMContentLoaded', () => App.init());
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
