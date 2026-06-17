@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><!-- v10 -->
+<meta charset="UTF-8">
+<script>
+window.onerror = function(msg, file, line) {
+  var el = document.getElementById('ver');
+  if (el) el.textContent = 'JS ERROR: ' + msg + ' line ' + line;
+  return false;
+};
+</script><!-- v10 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -533,6 +540,7 @@ body {
     <div class="header-left">
       <span style="font-size:22px;">✓</span>
       <h1>Todo</h1>
+      <span id="ver" style="font-size:10px;color:var(--text3);">v99</span>
     </div>
     <div class="header-stats">
       <span><span class="stat-num" id="statPending">0</span> 待办</span>
