@@ -1,8 +1,4 @@
-{
+json{
   "name": "ai-todo",
-  "version": "1.0.0",
-  "description": "AI-powered todo manager",
-  "scripts": {
-    "build": "echo 'static site'"
-  }
+  "version": "1.0.0"
 }
