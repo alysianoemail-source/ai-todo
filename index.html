@@ -1303,9 +1303,8 @@ const App = (() => {
 
     closeSummary();
     document.getElementById('thoughtInput').value = '';
-    try { recluster(); } catch(e) { console.log('recluster', e); }
     save();
-    try { render(); } catch(e) { console.log('render', e); }
+    location.reload();
     if (added > 0) toast('✅ 已加入 ' + added + ' 条待办');
     else toast('⚠️ 无效或已存在，未新增');
   }
