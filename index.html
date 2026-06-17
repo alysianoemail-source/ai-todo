@@ -710,14 +710,31 @@ const App = (() => {
   let todos = [];
   let filter = 'all';
 
-  function save() { localStorage.setItem('ai-todo-v3', JSON.stringify(todos)); }
+ function save() {
+  localStorage.setItem('ai-todo-v3', JSON.stringify(todos));
+  fetch('/api/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(todos)
+  }).catch(() => {});
+}
 
-  function load() {
-    try {
-      var d = localStorage.getItem('ai-todo-v3') || localStorage.getItem('ai-todo-v2');
-      todos = d ? JSON.parse(d) : [];
-    } catch (_) { todos = []; }
-  }
+function load() {
+  try {
+    var d = localStorage.getItem('ai-todo-v3') || localStorage.getItem('ai-todo-v2');
+    todos = d ? JSON.parse(d) : [];
+  } catch (_) { todos = []; }
+  fetch('/api/sync')
+    .then(r => r.json())
+    .then(res => {
+      if (res.ok && res.data && res.data.length > 0) {
+        todos = res.data;
+        localStorage.setItem('ai-todo-v3', JSON.stringify(todos));
+        render();
+      }
+    })
+    .catch(() => {});
+}
 
   function optimizeTitle(raw) {
     const noise = [
