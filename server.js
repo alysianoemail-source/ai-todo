@@ -12,7 +12,9 @@ const DATA_FILE = path.join(BASE, '.data', 'todos.json');
 const FEISHU_TOKEN = 'GTLDbmtwqoxMEixoO3GckQSsnPh';
 let lastFeishuSync = 0;
 
-fs.mkdirSync(path.join(BASE, '.data'), { recursive: true });
+if (process.env.NODE_ENV !== 'production') {
+  fs.mkdirSync(path.join(BASE, '.data'), { recursive: true });
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
