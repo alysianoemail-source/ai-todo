@@ -1,15 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<script>
-window.onerror = function(msg, file, line) {
-  var el = document.getElementById('ver');
-  if (el) el.textContent = 'JS ERROR: ' + msg + ' line ' + line;
-  return false;
-};
-</script><!-- v10 -->
+<meta charset="UTF-8"><!-- v10 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.json">
@@ -63,7 +57,6 @@ body {
   min-height: 100vh;
 }
 
-/* ========== Header ========== */
 .header {
   display: flex;
   align-items: center;
@@ -71,19 +64,10 @@ body {
 }
 
 .header-left { display: flex; align-items: center; gap: 8px; }
-
 .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-
-.header-stats {
-  display: flex;
-  gap: 16px;
-  font-size: 13px;
-  color: var(--text2);
-}
-
+.header-stats { display: flex; gap: 16px; font-size: 13px; color: var(--text2); }
 .stat-num { font-weight: 700; font-size: 15px; color: var(--text); }
 .stat-done .stat-num { color: var(--green); }
-
 .header-actions { display: flex; gap: 6px; }
 
 .icon-btn {
@@ -100,7 +84,6 @@ body {
 }
 .icon-btn:hover { background: var(--bg); }
 
-/* ========== Todo List ========== */
 .todo-section {
   background: var(--card);
   border: 1px solid var(--border);
@@ -126,7 +109,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* Filter select */
+.filter-select {
   padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -159,10 +142,8 @@ body {
   cursor: pointer;
 }
 .todo-item:hover { background: var(--bg); }
-
 .todo-item + .todo-item { border-top: 1px solid var(--border); }
 
-/* Checkbox - the "box" design */
 .checkbox {
   width: 22px; height: 22px;
   border-radius: 6px;
@@ -176,13 +157,7 @@ body {
   color: transparent;
 }
 .todo-item:hover .checkbox { border-color: var(--blue); }
-
-.todo-item.done .checkbox {
-  background: var(--green);
-  border-color: var(--green);
-  color: #fff;
-}
-
+.todo-item.done .checkbox { background: var(--green); border-color: var(--green); color: #fff; }
 .todo-item.done .todo-text { text-decoration: line-through; color: var(--text3); }
 .todo-item.done .todo-meta { opacity: 0.4; }
 
@@ -209,44 +184,17 @@ body {
   align-items: center;
 }
 
-.tag {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.tag-work { background: var(--blue-bg); color: var(--blue); }
-.tag-finance { background: var(--green-bg); color: #16a34a; }
-.tag-learning { background: var(--amber-bg); color: #d97706; }
-.tag-health { background: var(--teal-bg); color: #0d9488; }
-.tag-personal { background: var(--purple-bg); color: var(--purple); }
-.tag-errands { background: var(--pink-bg); color: #db2777; }
-.tag-other { background: var(--gray-bg); color: var(--gray); }
-
-/* Dynamic tag colors — generated via JS style attribute */
+.tag { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
 .tag-dynamic { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
 
-.priority-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
+.priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .priority-dot.high { background: var(--red); }
 .priority-dot.medium { background: var(--amber); }
 .priority-dot.low { background: var(--green); }
 
-.time-tag {
-  font-size: 11px;
-  color: var(--text3);
-}
+.time-tag { font-size: 11px; color: var(--text3); }
 
-.todo-actions {
-  display: flex;
-  gap: 2px;
-  opacity: 0;
-  transition: 0.15s;
-}
+.todo-actions { display: flex; gap: 2px; opacity: 0; transition: 0.15s; }
 .todo-item:hover .todo-actions { opacity: 1; }
 
 .mini-btn {
@@ -264,26 +212,11 @@ body {
 .mini-btn:hover { background: var(--bg); }
 .mini-btn.del:hover { background: var(--red-bg); color: var(--red); border-color: var(--red); }
 
-/* ========== Empty State ========== */
-.empty-list {
-  text-align: center;
-  padding: 48px 20px;
-  color: var(--text3);
-}
+.empty-list { text-align: center; padding: 48px 20px; color: var(--text3); }
 .empty-list .empty-icon { font-size: 36px; margin-bottom: 8px; opacity: 0.6; }
 
-/* ========== Divider ========== */
-.sync-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.sync-line {
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
+.sync-bar { display: flex; align-items: center; gap: 12px; }
+.sync-line { flex: 1; height: 1px; background: var(--border); }
 
 .sync-btn {
   padding: 10px 28px;
@@ -304,7 +237,6 @@ body {
 .sync-btn:hover { background: #000; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
 .sync-btn:active { transform: translateY(0); }
 
-/* ========== Input Section ========== */
 .input-section {
   background: var(--card);
   border: 1px solid var(--border);
@@ -337,9 +269,7 @@ body {
   resize: vertical;
   background: transparent;
 }
-#thoughtInput::placeholder {
-  color: var(--text3);
-}
+#thoughtInput::placeholder { color: var(--text3); }
 
 .input-footer {
   padding: 0 14px 14px;
@@ -348,11 +278,7 @@ body {
   justify-content: space-between;
 }
 
-.input-hint {
-  font-size: 11px;
-  color: var(--text3);
-}
-
+.input-hint { font-size: 11px; color: var(--text3); }
 .input-actions { display: flex; gap: 6px; }
 
 .btn-ghost {
@@ -368,7 +294,6 @@ body {
 .btn-ghost:hover { background: var(--bg); color: var(--text); }
 .btn-ghost.danger:hover { background: var(--red-bg); color: var(--red); border-color: var(--red); }
 
-/* ========== Toast ========== */
 .toast {
   position: fixed;
   bottom: 24px;
@@ -385,7 +310,6 @@ body {
 }
 @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-/* ========== Edit Drawer ========== */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.35);
   display: flex; align-items: center; justify-content: center;
@@ -408,89 +332,47 @@ body {
 }
 .edit-drawer-header h3 { font-size: 16px; }
 
-.edit-drawer-body {
-  padding: 16px 20px; overflow-y: auto; flex: 1;
-}
-
+.edit-drawer-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
 .edit-drawer-body .form-group { margin-bottom: 14px; }
-.edit-drawer-body label {
-  display: block; font-size: 12px; font-weight: 600;
-  color: var(--text2); margin-bottom: 4px;
-}
+.edit-drawer-body label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
 .edit-drawer-body input,
 .edit-drawer-body select,
 .edit-drawer-body textarea {
   width: 100%; padding: 8px 12px;
   border: 1px solid var(--border); border-radius: 6px;
   font-size: 13px; font-family: inherit; outline: none;
-  background: var(--bg); color: var(--text);
-  transition: 0.15s;
+  background: var(--bg); color: var(--text); transition: 0.15s;
 }
 .edit-drawer-body input:focus,
 .edit-drawer-body select:focus,
-.edit-drawer-body textarea:focus {
-  border-color: var(--blue); background: var(--card);
-}
-.edit-drawer-body .form-row {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-}
+.edit-drawer-body textarea:focus { border-color: var(--blue); background: var(--card); }
+.edit-drawer-body .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 .edit-drawer-footer {
   padding: 12px 20px; border-top: 1px solid var(--border);
   display: flex; gap: 8px; justify-content: flex-end;
 }
 
-/* Sub-tasks */
 .subtask-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-.subtask-item {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 8px; border-radius: 5px; background: var(--bg);
-  font-size: 13px;
-}
-.subtask-item .sub-check {
-  width: 18px; height: 18px; border-radius: 4px;
-  border: 2px solid var(--border); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; flex-shrink: 0; transition: 0.15s;
-}
+.subtask-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 5px; background: var(--bg); font-size: 13px; }
+.subtask-item .sub-check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: 0.15s; }
 .subtask-item.done .sub-check { background: var(--green); border-color: var(--green); color: #fff; }
 .subtask-item.done .sub-text { text-decoration: line-through; color: var(--text3); }
 .subtask-item .sub-text { flex: 1; }
-.subtask-item .sub-del {
-  width: 20px; height: 20px; border-radius: 4px; border: none;
-  background: transparent; cursor: pointer; font-size: 14px; color: var(--text3);
-  display: flex; align-items: center; justify-content: center;
-}
+.subtask-item .sub-del { width: 20px; height: 20px; border-radius: 4px; border: none; background: transparent; cursor: pointer; font-size: 14px; color: var(--text3); display: flex; align-items: center; justify-content: center; }
 .subtask-item .sub-del:hover { background: var(--red-bg); color: var(--red); }
 .subtask-add { display: flex; gap: 6px; }
 .subtask-add input { flex: 1; }
 
-/* Summary preview rows */
-.summary-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 10px; border-radius: 6px;
-  background: var(--bg); margin-bottom: 6px;
-}
+.summary-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; background: var(--bg); margin-bottom: 6px; }
 .summary-check input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--blue); }
-.summary-input {
-  flex: 1; padding: 5px 8px; border: 1px solid transparent;
-  border-radius: 4px; font-size: 13px; font-family: inherit;
-  background: transparent; outline: none; color: var(--text);
-}
+.summary-input { flex: 1; padding: 5px 8px; border: 1px solid transparent; border-radius: 4px; font-size: 13px; font-family: inherit; background: transparent; outline: none; color: var(--text); }
 .summary-input:focus { border-color: var(--blue); background: var(--card); }
 .summary-time { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.sub-badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; background: var(--bg); color: var(--text3); }
 
-/* Sub-task badge on todo card */
-.sub-badge {
-  font-size: 10px; padding: 1px 6px; border-radius: 10px;
-  background: var(--bg); color: var(--text3);
-}
-
-/* ========== Mobile ========== */
 @media (max-width: 600px) {
   .app { padding: 12px 10px 32px; gap: 12px; }
-
-  /* Increase touch targets */
   .checkbox { width: 26px; height: 26px; }
   .todo-item { padding: 14px 10px; }
   .mini-btn { width: 32px; height: 32px; font-size: 16px; }
@@ -498,35 +380,15 @@ body {
   .sync-btn { padding: 12px 20px; font-size: 14px; }
   .btn-ghost { padding: 8px 16px; font-size: 13px; }
   .filter-select { padding: 8px 28px 8px 12px; font-size: 14px; }
-
-  /* Full-width modals */
-  .edit-drawer {
-    width: 100%; max-width: 100%; max-height: 100vh;
-    border-radius: 16px 16px 0 0;
-    position: fixed; bottom: 0; left: 0; right: 0;
-    animation: slideUpMobile 0.2s;
-  }
+  .edit-drawer { width: 100%; max-width: 100%; max-height: 100vh; border-radius: 16px 16px 0 0; position: fixed; bottom: 0; left: 0; right: 0; animation: slideUpMobile 0.2s; }
   @keyframes slideUpMobile { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
   .edit-drawer-body { max-height: 55vh; -webkit-overflow-scrolling: touch; }
-
-  /* Ensure overlays are click-to-close */
   .modal-overlay { align-items: flex-end; }
-
-  /* Larger textarea */
   #thoughtInput { min-height: 140px; font-size: 16px; }
   .input-hint { font-size: 12px; }
-
-  /* Hide stats on small screens */
   .header-stats { display: none; }
-
-  /* Stack filter header */
   .todo-section-header { flex-direction: column; align-items: stretch; gap: 8px; }
-
-  /* Scrollable todo list */
   .todo-list { max-height: 45vh; }
-
-  /* Larger text for readability */
   .todo-text { font-size: 15px; }
   .tag-dynamic { font-size: 12px; padding: 3px 10px; }
 }
@@ -535,12 +397,10 @@ body {
 <body>
 
 <div class="app">
-  <!-- Header -->
   <div class="header">
     <div class="header-left">
       <span style="font-size:22px;">✓</span>
       <h1>Todo</h1>
-      <span id="ver" style="font-size:10px;color:var(--text3);">v99</span>
     </div>
     <div class="header-stats">
       <span><span class="stat-num" id="statPending">0</span> 待办</span>
@@ -553,7 +413,6 @@ body {
     </div>
   </div>
 
-  <!-- Settings Panel (key is server-side now) -->
   <div id="settingsPanel" style="display:none;background:var(--card);border-radius:10px;padding:12px;margin-bottom:4px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <span style="font-size:13px;font-weight:500;">🧠 AI 长文总结</span>
@@ -566,7 +425,6 @@ body {
     <div id="aiTestResult" style="display:none;margin-top:6px;"></div>
   </div>
 
-  <!-- Todo List -->
   <div class="todo-section">
     <div class="todo-section-header">
       <span class="todo-section-title">📋 待办列表</span>
@@ -580,7 +438,6 @@ body {
     <div class="todo-list" id="todoList"></div>
   </div>
 
-  <!-- Sync Bar -->
   <div class="sync-bar">
     <div class="sync-line"></div>
     <div style="text-align:center;">
@@ -590,11 +447,10 @@ body {
     <div class="sync-line"></div>
   </div>
 
-  <!-- Input Section -->
   <div class="input-section">
     <div class="input-header">💭 瞬时想法</div>
     <div class="input-body">
-      <textarea id="thoughtInput" placeholder="把脑袋里的东西倒出来。&#10;用逗号、分号或换行分隔，AI 自动识别成独立待办。&#10;&#10;例如：&#10;完成Q2季报分析，约理财顾问review组合&#10;读《机器学习实战》第5章；健身房练腿&#10;回复老板邮件&#10;给孩子报夏令营&#10;修车年检，研究Python量化框架" rows="8"></textarea>
+      <textarea id="thoughtInput" placeholder="把脑袋里的东西倒出来。&#10;用逗号、分号或换行分隔，AI 自动识别成独立待办。&#10;&#10;例如：&#10;完成Q2季报分析，约理财顾问review组合&#10;读《机器学习实战》第5章；健身房练腿&#10;回复老板邮件&#10;给孩子报夏令营" rows="8"></textarea>
     </div>
     <div class="input-footer">
       <span class="input-hint">Ctrl+Enter 快速更新 · 重复项自动跳过</span>
@@ -605,15 +461,12 @@ body {
   </div>
 </div>
 
-<!-- Footer -->
 <div style="text-align:center;padding:16px 0 0;font-size:11px;color:var(--text3);line-height:1.8;">
   🤖 AI 本地运行，零 token · 数据存于本设备 · 📤📥 导出备份
 </div>
 
-<!-- Toast -->
 <div id="toast" class="toast" style="display:none;"></div>
 
-<!-- Edit Panel -->
 <div class="modal-overlay" id="editPanel" style="display:none;">
   <div class="edit-drawer">
     <div class="edit-drawer-header">
@@ -669,7 +522,6 @@ body {
   </div>
 </div>
 
-<!-- AI Summary Preview Panel -->
 <div class="modal-overlay" id="summaryPanel" style="display:none;">
   <div class="edit-drawer" style="max-height:90vh;">
     <div class="edit-drawer-header">
@@ -685,26 +537,17 @@ body {
 </div>
 
 <script>
-// ============================================================
-// AI Todo · 智能待办引擎
-// ============================================================
-
 const App = (() => {
 
-  // ==================== AI Engine: 动态聚类 ====================
-
-  // Chinese/English stopwords — words that carry no topic signal
   const STOP = new Set('的 了 在 是 我 有 和 就 不 人 都 一 一个 上 也 很 到 说 要 去 你 会 着 没有 看 好 自己 这 他 她 它 们 那 些 什么 怎么 哪 吗 吧 呢 啊 哦 嗯 但 而 与 或 为 以 所以 因为 如果 虽然 可以 应该 需要 已经 正在 将 把 被 从 让 给 对 向 关于 通过 以及 个 种 次 下 中 大 小 多 少 来 做 能 想 用 还 这个 那个 进行 the a an is are was were be been being have has had do does did will would can could may might shall should to of in on at for with by from about as into through during before after above below up down out off over under between among'.split(' '));
 
   function tokenize(text) {
     const result = [];
-    // Split on punctuation/whitespace, keep Chinese runs and alphanumeric words
     const raw = text.replace(/[，。！？、；：""''（）【】《》\s,.\!\?;:\(\)\[\]{}"']+/g, ' ').split(' ');
     for (const w of raw) {
       const t = w.trim();
       if (!t) continue;
       if (/^[\u4e00-\u9fff]+$/.test(t)) {
-        // Chinese: whole fragment + bigrams (bigrams only useful if they recur across items)
         result.push(t);
         if (t.length >= 2) {
           for (let i = 0; i < t.length - 1; i++) result.push(t.slice(i, i+2));
@@ -716,22 +559,17 @@ const App = (() => {
     return result.filter(w => w.length >= 2 && !STOP.has(w));
   }
 
+  // ====== FIX: recluster with null-safe Object.entries ======
   function recluster() {
     const pending = todos.filter(t => t.status !== 'completed');
     if (pending.length <= 1) {
-      // Single item: no cluster needed
       for (const t of pending) { t.category = 'other'; t.clusterName = ''; }
       App._clusters = [];
       return;
     }
 
-    // Step 0: extract candidate keywords per todo
-    const todoWords = pending.map(t => ({
-      id: t.id,
-      words: tokenize(t.title)
-    }));
+    const todoWords = pending.map(t => ({ id: t.id, words: tokenize(t.title) }));
 
-    // Filter: only keep n-grams that appear in >= 2 different todos (cross-item frequency filter)
     const docFreq = {};
     for (const tw of todoWords) {
       const seen = new Set();
@@ -741,7 +579,6 @@ const App = (() => {
     }
     const validWords = new Set(Object.keys(docFreq).filter(w => docFreq[w] >= 2));
 
-    // Step 1: per-todo keyword frequency (only valid words)
     const todoKeys = todoWords.map(tw => {
       const freq = {};
       for (const w of tw.words) {
@@ -750,14 +587,12 @@ const App = (() => {
       return { id: tw.id, freq, topWords: Object.keys(freq) };
     });
 
-    // If no shared keywords at all, every item stands alone
     if (validWords.size === 0) {
       for (const t of pending) { t.category = 'other'; t.clusterName = ''; }
       App._clusters = [];
       return;
     }
 
-    // Step 2: build adjacency graph — edge if two todos share any valid keyword
     const adj = {};
     for (const tk of todoKeys) adj[tk.id] = [];
 
@@ -772,7 +607,6 @@ const App = (() => {
       }
     }
 
-    // Step 3: find connected components (BFS)
     const visited = new Set();
     const components = [];
 
@@ -788,30 +622,33 @@ const App = (() => {
           if (!visited.has(nb)) { visited.add(nb); queue.push(nb); }
         }
       }
-      if (comp.length >= 2) components.push(comp); // only meaningful clusters (2+ items)
+      if (comp.length >= 2) components.push(comp);
     }
 
-    // Step 4: name each cluster by its top shared keywords
     const clusters = components.map((ids, idx) => {
       const wordCount = {};
       for (const id of ids) {
         const tw = todoKeys.find(x => x.id === id);
-        if (!tw || !tw.freq) continue;
+        // FIX: null check before iterating freq
+        if (!tw || !tw.freq || typeof tw.freq !== 'object') continue;
         for (var w in tw.freq) {
           if (tw.freq.hasOwnProperty(w)) wordCount[w] = (wordCount[w] || 0) + tw.freq[w];
         }
       }
+      // FIX: null-safe entries
       var entries = [];
       if (wordCount && typeof wordCount === 'object') {
-        for (var key in wordCount) { if (wordCount.hasOwnProperty(key)) entries.push([key, wordCount[key]]); }
+        for (var key in wordCount) {
+          if (wordCount.hasOwnProperty(key)) entries.push([key, wordCount[key]]);
+        }
       }
       entries.sort(function(a, b) { return b[1] - a[1]; });
       var name = entries.slice(0, 2).map(function(x) { return x[0]; }).join('·');
+      if (!name) name = '分组' + (idx + 1);
       const clusterId = 'c' + idx;
       return { id: clusterId, name, ids: new Set(ids) };
     });
 
-    // Step 5: assign clusters to todos; unclustered get 'other'
     const clusterMap = {};
     for (const c of clusters) {
       for (const id of c.ids) clusterMap[id] = c.id;
@@ -822,8 +659,6 @@ const App = (() => {
       t.clusterName = clusterMap[t.id] ? clusters.find(c => c.id === clusterMap[t.id]).name : '';
     }
 
-    // Keep completed todos' categories unchanged (they were assigned when pending)
-    // Store clusters for render
     App._clusters = clusters;
   }
 
@@ -840,7 +675,6 @@ const App = (() => {
     const lo = '顺便 无所谓 可做可不做 optional 可有可无 锦上添花'.split(' ');
     for (const k of hi) if (text.includes(k)) return 'high';
     for (const k of lo) if (text.includes(k)) return 'low';
-    // Default: content length & specific terms suggest importance
     if (text.length > 15) return 'medium';
     return 'low';
   }
@@ -866,31 +700,24 @@ const App = (() => {
   }
 
   function priorityScore(urgency, importance, min) {
-    const u = { high: 3, medium: 2, low: 1 }[urgency];
-    const i = { high: 3, medium: 2, low: 1 }[importance];
+    const u = { high: 3, medium: 2, low: 1 }[urgency] || 2;
+    const i = { high: 3, medium: 2, low: 1 }[importance] || 2;
     const base = u * 2 + i * 3;
-    const timeF = Math.max(0.4, Math.min(1.5, 45 / min));
+    const timeF = Math.max(0.4, Math.min(1.5, 45 / (min || 30)));
     return Math.round(base * timeF * 10);
   }
-
-  // ==================== State ====================
 
   let todos = [];
   let filter = 'all';
 
-  function save() {
-    localStorage.setItem('ai-todo-v3', JSON.stringify(todos));
-  }
+  function save() { localStorage.setItem('ai-todo-v3', JSON.stringify(todos)); }
 
   function load() {
     try {
       var d = localStorage.getItem('ai-todo-v3') || localStorage.getItem('ai-todo-v2');
-      if (d) todos = JSON.parse(d);
-      else todos = [];
+      todos = d ? JSON.parse(d) : [];
     } catch (_) { todos = []; }
   }
-
-  // ==================== Title Optimizer ====================
 
   function optimizeTitle(raw) {
     const noise = [
@@ -904,105 +731,27 @@ const App = (() => {
     for (const re of noise) t = t.replace(re, '');
     t = t.replace(/\s+/g, '').trim();
     if (t.length < 2) return raw.trim().replace(/\s+/g, '');
-    if (t.length > 15)     {
+    if (t.length > 15) {
       const chunks = t.split(/[，,、；;。！？\s]+/).filter(function(c){return c.length>=2;});
       if (chunks.length) {
         chunks.sort(function(a,b){return (b.match(/[\u4e00-\u9fff]/g)||[]).length-(a.match(/[\u4e00-\u9fff]/g)||[]).length;});
         t = chunks[0];
-      } else {
-        // Very long single chunk — truncate
-        t = t.slice(0, 12);
-      }
+      } else { t = t.slice(0, 12); }
     }
     t = t.replace(/^[的了呢吗啊呀哦]+/, '').replace(/[的了呢吗啊呀哦]+$/, '');
     t = t.replace(/(?:的概念部分|的问题|的内容|的事情|的东西|这一块)$/, '');
     return t || raw.trim().replace(/\s+/g, '');
   }
 
-  // ==================== Smart Long-Text Parser ====================
-
-  function extractTodosFromLongText(text) {
-    const items = [];
-    const blocks = text.split(/\n{2,}/);
-
-    for (const block of blocks) {
-      const trimmed = block.trim();
-      if (!trimmed || trimmed.length < 4) continue;
-
-      let foundStructured = false;
-      const lines = trimmed.split(/\n/);
-
-      const firstLine = lines[0].trim();
-      let blockTime = 0;
-      if (/整块|完整|周末/.test(firstLine) && firstLine.length < 40) blockTime = 180;
-      else if (/零散|碎片|通勤|午休|睡前/.test(firstLine) && firstLine.length < 40) blockTime = 20;
-
-      for (let i = 0; i < lines.length; i++) {
-        let line = lines[i].trim();
-        if (!line) continue;
-
-        if (i === 0 && line.length < 40 && !/\d+[\.\)、]/.test(line) && !/^[-•·]/.test(line)) continue;
-
-        const numbered = line.match(/^(\d+)[\.\)、]\s*(.+)/);
-        const bulleted = line.match(/^[-•·]\s*(.+)/);
-
-        let core = '';
-        if (numbered) { core = numbered[2]; foundStructured = true; }
-        else if (bulleted) { core = bulleted[1]; foundStructured = true; }
-        else if (/[做学读写看练研究完成开展推进处理].{2,}/.test(line)) { core = line; }
-
-        if (!core) continue;
-        core = core.replace(/[—\-]{1,3}\s*.+$/, '');
-        core = core.replace(/[（(][^)）]{0,30}[)）]$/, '');
-        core = core.replace(/[，,。\.；;！!？?]+$/, '');
-        core = core.trim();
-        if (core.length < 3) continue;
-
-        const title = optimizeTitle(core);
-        if (title.length < 2) continue;
-
-        let em = blockTime || estimateTime(line);
-        if (/半天/.test(line)) em = 240;
-        else if (/周末|整块/.test(line)) em = 180;
-        else if (/碎片|通勤|午休|睡前|10.*分|15.*分/.test(line)) em = 20;
-        else if (/小时/.test(line)) em = 60;
-
-        let subTasks = [];
-        const subMatch = line.match(/[—\-]{1,3}\s*(.+)/);
-        if (subMatch) subTasks = subMatch[1].split(/[，,、；;]/).map(s => s.trim()).filter(s => s.length >= 2 && s.length <= 20);
-
-        items.push({ title, estimatedMinutes: em, category: 'other', note: '', subTasks: subTasks.slice(0, 6) });
-      }
-
-      // Fallback: no structured items found → split by sentence
-      if (!foundStructured) {
-        const sentences = trimmed.split(/[。！？\n]+/).map(s => s.trim()).filter(s => s.length >= 8 && s.length <= 80);
-        for (const s of sentences) {
-          const clean = s.replace(/[—\-]{1,3}\s*.+$/, '').replace(/[（(][^)）]{0,30}[)）]$/, '').replace(/[，,；;！!？?]+$/, '').trim();
-          if (clean.length < 4) continue;
-          const title = optimizeTitle(clean);
-          if (title.length < 3) continue;
-          const em = estimateTime(s);
-          items.push({ title, estimatedMinutes: em, category: 'other', note: '', subTasks: [] });
-        }
-      }
-    }
-
-    const seen = new Set();
-    return items.filter(item => { if (seen.has(item.title)) return false; seen.add(item.title); return true; });
-  }
-
   function syncFromThoughts() {
     const input = document.getElementById('thoughtInput').value.trim();
     if (!input) return toast('请先在下方输入你的想法');
 
-    // Long text (>25 chars) → AI extraction (via /api/chat proxy)
     if (input.length >= 25) {
       aiExtractTodos(input);
       return;
     }
 
-    // Short text → client-side processing
     const lines = input.split(/[\n，,、；;]+/).map(l => l.trim()).filter(l => l);
     let added = 0, skipped = 0;
     const newItems = [];
@@ -1010,7 +759,6 @@ const App = (() => {
     for (let line of lines) {
       line = line.replace(/^[-*\d.)。•·]\s*/, '').trim();
       if (!line) continue;
-      // Optimize: compress noisy long-form input into concise title
       const optimized = optimizeTitle(line);
       if (todos.some(t => t.title === optimized || t.title === line)) { skipped++; continue; }
 
@@ -1037,58 +785,15 @@ const App = (() => {
       added++;
     }
 
-    // Auto-merge: detect items sharing common prefix and group as sub-tasks
-    const merged = [];
-    const used = new Set();
-    for (let i = 0; i < newItems.length; i++) {
-      if (used.has(i)) continue;
-      const a = newItems[i];
-      // Find common prefix with other items
-      let group = [i];
-      for (let j = i + 1; j < newItems.length; j++) {
-        if (used.has(j)) continue;
-        const b = newItems[j];
-        const prefix = commonPrefix(a.title, b.title);
-        // Merge if prefix >= 2 Chinese chars or 3+ regular chars
-        const cnCount = (prefix.match(/[\u4e00-\u9fff]/g) || []).length;
-        if (cnCount >= 2 || prefix.length >= 3) {
-          group.push(j);
-        }
-      }
-      if (group.length >= 2) {
-        // Merge into one parent
-        const parent = { ...a };
-        const prefix = commonPrefix(a.title, newItems[group[1]].title);
-        // Clean prefix: remove trailing symbols
-        parent.title = prefix.replace(/[-:：\s]+$/, '');
-        parent.subTasks = group.map(k => ({
-          id: newItems[k].id + '_sub',
-          title: newItems[k].title.slice(prefix.length).replace(/^[-:：\s]+/, '') || newItems[k].title,
-          done: false
-        }));
-        parent.estimatedMinutes = group.reduce((s, k) => s + (newItems[k].estimatedMinutes || 30), 0);
-        merged.push(parent);
-        group.forEach(k => used.add(k));
-      }
-    }
-    // Add unmerged items
-    for (let i = 0; i < newItems.length; i++) {
-      if (!used.has(i)) merged.push(newItems[i]);
-    }
-
-    todos.push(...merged);
-
+    todos.push(...newItems);
     document.getElementById('thoughtInput').value = '';
-    recluster();
+    try { recluster(); } catch(e) { console.log('recluster', e); }
     save();
-    render();
-    const msg = added ? `✅ 新增 ${added} 项` : '';
-    const skip = skipped ? `，跳过 ${skipped} 项重复` : '';
-    const merge = merged.length < added ? `，合并为 ${merged.length} 条` : '';
-    toast(msg + merge + skip || '列表已是最新');
+    try { render(); } catch(e) { console.log('render', e); }
+    const msg = added ? '✅ 新增 ' + added + ' 项' : '';
+    const skip = skipped ? '，跳过 ' + skipped + ' 项重复' : '';
+    toast(msg + skip || '列表已是最新');
   }
-
-  // ==================== AI Model (DeepSeek via /api/chat) ====================
 
   function updateAiStatus() {
     var label = document.getElementById('aiLabel');
@@ -1120,96 +825,66 @@ const App = (() => {
     .then(function(data) {
       btn.textContent = '✨ 一键更新';
       btn.disabled = false;
-      var content = data.choices && data.choices[0] && data.choices[0].message.content;
-      if (!content) { toast('AI 返回为空'); fallbackExtract(text); return; }
+      var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (!content) { toast('AI 返回为空，使用本地解析'); fallbackExtract(text); return; }
       try {
         var jsonStr = content.match(/\[[\s\S]*\]/);
-        if (!jsonStr) { toast('格式异常'); fallbackExtract(text); return; }
+        if (!jsonStr) { toast('格式异常，使用本地解析'); fallbackExtract(text); return; }
         var aiItems = JSON.parse(jsonStr[0]);
         if (!aiItems.length) { toast('未提取到待办项'); return; }
         showSummaryPreview(aiItems.map(function(t) {
           return { title: t.title, estimatedMinutes: t.estimatedMinutes || 30, category: 'other', subTasks: [], note: '' };
         }));
-      } catch(e) {
-        toast('解析失败');
-        fallbackExtract(text);
-      }
+      } catch(e) { toast('解析失败，使用本地解析'); fallbackExtract(text); }
     })
     .catch(function(e) {
       btn.textContent = '✨ 一键更新';
       btn.disabled = false;
-      toast('❌ ' + (e.message || '调用失败'));
+      toast('AI 调用失败，使用本地解析');
       fallbackExtract(text);
     });
   }
 
   function fallbackExtract(text) {
-    var extracted = extractTodosFromLongText(text);
-    if (extracted.length === 0) {
-      extracted = [{ title: optimizeTitle(text), estimatedMinutes: 30, category: 'other', subTasks: [], note: '' }];
+    const lines = text.split(/[\n，,、；;]+/).map(l => l.trim()).filter(l => l.length >= 2);
+    const items = lines.map(function(l) {
+      return { title: optimizeTitle(l), estimatedMinutes: estimateTime(l), category: 'other', subTasks: [], note: '' };
+    }).filter(function(i) { return i.title.length >= 2; });
+    if (items.length === 0) {
+      items.push({ title: optimizeTitle(text), estimatedMinutes: 30, category: 'other', subTasks: [], note: '' });
     }
-    showSummaryPreview(extracted);
+    showSummaryPreview(items);
   }
 
   function testAi() {
     var result = document.getElementById('aiTestResult');
     result.textContent = '⏳ 测试中...';
     result.style.display = 'block';
-    result.style.background = 'var(--card)';
-    result.style.padding = '10px';
-    result.style.borderRadius = '8px';
-    result.style.fontSize = '11px';
-    result.style.fontFamily = 'monospace';
-    result.style.whiteSpace = 'pre-wrap';
-    result.style.wordBreak = 'break-all';
-    result.style.maxHeight = '200px';
-    result.style.overflow = 'auto';
-
+    result.style.cssText = 'display:block;margin-top:6px;background:var(--card);padding:10px;border-radius:8px;font-size:11px;font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow:auto;';
     fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: '你好' }],
-        max_tokens: 10
-      })
+      body: JSON.stringify({ messages: [{ role: 'user', content: '你好' }], max_tokens: 10 })
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      var text = data.choices && data.choices[0] && data.choices[0].message.content;
-      if (text) {
-        result.textContent = '✅ 连接成功！\n回复: ' + text;
-        result.style.background = '#e6ffe6';
-      } else {
-        result.textContent = '❌ 返回为空\n' + JSON.stringify(data).slice(0, 300);
-        result.style.background = '#ffe6e6';
-      }
+      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (text) { result.textContent = '✅ 连接成功！\n回复: ' + text; result.style.background = '#e6ffe6'; }
+      else { result.textContent = '❌ 返回为空\n' + JSON.stringify(data).slice(0, 300); result.style.background = '#ffe6e6'; }
     })
-    .catch(function(e) {
-      result.textContent = '❌ ' + (e.message || '网络错误');
-      result.style.background = '#ffe6e6';
-    });
+    .catch(function(e) { result.textContent = '❌ ' + (e.message || '网络错误'); result.style.background = '#ffe6e6'; });
   }
-
-  // ==================== Summary Preview Panel ====================
 
   let summaryItems = [];
 
   function showSummaryPreview(items) {
-    summaryItems = items.map((item, i) => ({
-      ...item,
-      _idx: i,
-      _checked: true,
-      _title: item.title
-    }));
+    summaryItems = items.map((item, i) => ({ ...item, _idx: i, _checked: true, _title: item.title }));
     const list = document.getElementById('summaryList');
     list.innerHTML = summaryItems.map((item, i) => `
       <div class="summary-row">
-        <label class="summary-check">
-          <input type="checkbox" checked onchange="App.toggleSummaryItem(${i})">
-        </label>
+        <label class="summary-check"><input type="checkbox" checked onchange="App.toggleSummaryItem(${i})"></label>
         <input class="summary-input" value="${esc(item._title)}" oninput="App.editSummaryItem(${i}, this.value)" placeholder="编辑标题">
-        <span class="summary-time">${item.estimatedMinutes || '?'}min</span>
-        ${item.subTasks && item.subTasks.length ? `<span class="sub-badge" style="font-size:10px;">${item.subTasks.length}子任务</span>` : ''}
+        <span class="summary-time">${item.estimatedMinutes || 30}min</span>
       </div>
     `).join('') + `
       <div class="summary-row" style="border:1px dashed var(--border);">
@@ -1221,62 +896,34 @@ const App = (() => {
     document.getElementById('syncBtn').disabled = false;
   }
 
-  function toggleSummaryItem(i) {
-    summaryItems[i]._checked = !summaryItems[i]._checked;
-  }
+  function toggleSummaryItem(i) { summaryItems[i]._checked = !summaryItems[i]._checked; }
 
   function addSummaryItem() {
     const newIdx = summaryItems.length;
-    summaryItems.push({
-      title: '', _idx: newIdx, _checked: true, _title: '',
-      estimatedMinutes: 30, category: 'other', subTasks: [], note: ''
-    });
-    // Re-render to include new item
+    summaryItems.push({ title: '', _idx: newIdx, _checked: true, _title: '', estimatedMinutes: 30, category: 'other', subTasks: [], note: '' });
     const list = document.getElementById('summaryList');
     const newRow = document.createElement('div');
     newRow.className = 'summary-row';
     newRow.innerHTML = `
-      <label class="summary-check">
-        <input type="checkbox" checked onchange="App.toggleSummaryItem(${newIdx})">
-      </label>
+      <label class="summary-check"><input type="checkbox" checked onchange="App.toggleSummaryItem(${newIdx})"></label>
       <input class="summary-input" value="" oninput="App.editSummaryItem(${newIdx}, this.value)" placeholder="输入新待办...">
-      <span class="summary-time">30min</span>
-    `;
+      <span class="summary-time">30min</span>`;
     list.insertBefore(newRow, list.lastElementChild);
-    // Focus the new input
-    setTimeout(() => newRow.querySelector('input').focus(), 100);
+    setTimeout(() => newRow.querySelector('input[type=text]') && newRow.querySelector('input[type=text]').focus(), 100);
   }
 
-  function editSummaryItem(i, val) {
-    summaryItems[i]._title = val;
-  }
+  function editSummaryItem(i, val) { summaryItems[i]._title = val; }
 
+  // ====== FIX: confirmSummary with safe recluster/render ======
   function confirmSummary() {
-    var selected = [];
-    for (var i = 0; i < summaryItems.length; i++) {
-      var s = summaryItems[i];
-      if (!s._checked) continue;
-      if (!s._title || !s._title.trim()) continue;
-      selected.push(s);
-    }
+    var selected = summaryItems.filter(function(s) { return s._checked && s._title && s._title.trim().length >= 2; });
     if (selected.length === 0) return toast('请至少选一条');
-
-    // DIAG: show what we're confirming
-    var titles = [];
-    for (var n = 0; n < selected.length; n++) titles.push(selected[n]._title.trim());
-    toast('📋 选中 ' + selected.length + ' 条: ' + titles.slice(0, 3).join(', '));
 
     var added = 0;
     for (var j = 0; j < selected.length; j++) {
       var item = selected[j];
       var title = item._title.trim();
-      if (title.length < 2) continue;
-      // Skip exact duplicates
-      var dup = false;
-      for (var k = 0; k < todos.length; k++) {
-        if (todos[k].title === title) { dup = true; break; }
-      }
-      if (dup) continue;
+      if (todos.some(function(t) { return t.title === title; })) continue;
 
       var urg = calcUrgency(title);
       var imp = calcImportance(title);
@@ -1303,49 +950,35 @@ const App = (() => {
 
     closeSummary();
     document.getElementById('thoughtInput').value = '';
+    try { recluster(); } catch(e) { console.log('recluster', e); }
     save();
-    location.reload();
-    if (added > 0) toast('✅ 已加入 ' + added + ' 条待办');
-    else toast('⚠️ 无效或已存在，未新增');
+    try { render(); } catch(e) { console.log('render', e); }
+    toast(added > 0 ? '✅ 已加入 ' + added + ' 条待办' : '⚠️ 无效或已存在，未新增');
   }
 
-  function closeSummary() {
-    document.getElementById('summaryPanel').style.display = 'none';
-    summaryItems = [];
-  }
+  function closeSummary() { document.getElementById('summaryPanel').style.display = 'none'; summaryItems = []; }
 
-  // Find the longest common prefix of two strings (character by character)
-  function commonPrefix(a, b) {
-    let i = 0;
-    while (i < a.length && i < b.length && a[i] === b[i]) i++;
-    return a.slice(0, i);
-  }
+  function commonPrefix(a, b) { let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++; return a.slice(0, i); }
 
   function toggle(id) {
     const t = todos.find(t => t.id === id);
     if (!t) return;
     t.status = t.status === 'completed' ? 'pending' : 'completed';
     t.completedAt = t.status === 'completed' ? new Date().toISOString() : null;
-    save();
-    render();
+    save(); render();
   }
 
   function remove(id) {
     todos = todos.filter(t => t.id !== id);
-    save();
-    render();
-    toast('已删除');
+    save(); render(); toast('已删除');
   }
 
   function clearDone() {
     const before = todos.length;
     todos = todos.filter(t => t.status !== 'completed');
-    save();
-    render();
+    save(); render();
     if (todos.length < before) toast('已清除完成项');
   }
-
-  // ==================== Edit Panel ====================
 
   let editingId = null;
 
@@ -1354,31 +987,19 @@ const App = (() => {
     if (!t) return;
     editingId = id;
     document.getElementById('editTitle').value = t.title;
-    document.getElementById('editPriority').value = t.priorityLabel;
-    document.getElementById('editDuration').value = t.estimatedMinutes;
+    document.getElementById('editPriority').value = t.priorityLabel || 'medium';
+    document.getElementById('editDuration').value = t.estimatedMinutes || 30;
     document.getElementById('editDeadline').value = t.deadline || '';
     document.getElementById('editNote').value = t.note || '';
-
-    // Build category dropdown
     const catSelect = document.getElementById('editCategory');
     const activeClusters = App._clusters || [];
     catSelect.innerHTML = activeClusters.map(c => `<option value="${c.id}" ${t.category === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
-    if (t.category === 'other' || !activeClusters.find(c => c.id === t.category)) {
-      catSelect.innerHTML += `<option value="other" selected>（自提取标签）</option>`;
-    }
-    // Also add all cluster options if not present
-    if (!activeClusters.find(c => c.id === t.category) && t.category !== 'other') {
-      catSelect.innerHTML += `<option value="${t.category}" selected>（当前分类）</option>`;
-    }
-
+    catSelect.innerHTML += `<option value="other" ${t.category === 'other' ? 'selected' : ''}>（无分组）</option>`;
     renderSubTasks(t);
     document.getElementById('editPanel').style.display = 'flex';
   }
 
-  function closeEdit() {
-    document.getElementById('editPanel').style.display = 'none';
-    editingId = null;
-  }
+  function closeEdit() { document.getElementById('editPanel').style.display = 'none'; editingId = null; }
 
   function saveEdit() {
     const t = todos.find(t => t.id === editingId);
@@ -1391,10 +1012,7 @@ const App = (() => {
     t.deadline = document.getElementById('editDeadline').value || null;
     t.note = document.getElementById('editNote').value.trim();
     t.priority = priorityScore(t.urgency, t.importance, t.estimatedMinutes);
-    closeEdit();
-    save();
-    render();
-    toast('已保存');
+    closeEdit(); save(); render(); toast('已保存');
   }
 
   function renderSubTasks(t) {
@@ -1407,8 +1025,7 @@ const App = (() => {
           <div class="sub-check" onclick="App.toggleSubTask(${i})">${st.done ? '✓' : ''}</div>
           <span class="sub-text">${esc(st.title)}</span>
           <button class="sub-del" onclick="App.removeSubTask(${i})">✕</button>
-        </div>
-      `).join('');
+        </div>`).join('');
     }
   }
 
@@ -1438,57 +1055,42 @@ const App = (() => {
     renderSubTasks(t);
   }
 
-  function clearThoughts() {
-    document.getElementById('thoughtInput').value = '';
-    toast('已清空');
-  }
+  function clearThoughts() { document.getElementById('thoughtInput').value = ''; toast('已清空'); }
 
   function archiveOld() {
     const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const toArchive = todos.filter(t => t.status === 'completed' && new Date(t.completedAt || t.createdAt).getTime() < cutoff);
     if (toArchive.length === 0) return toast('没有需要归档的旧任务');
-    if (!confirm(`归档 ${toArchive.length} 条30天前完成的任务？（数据仍保留在导出文件中）`)) return;
+    if (!confirm('归档 ' + toArchive.length + ' 条30天前完成的任务？')) return;
     todos = todos.filter(t => !toArchive.includes(t));
-    save();
-    render();
-    toast(`已归档 ${toArchive.length} 条`);
+    save(); render(); toast('已归档 ' + toArchive.length + ' 条');
   }
 
   function exportData() {
     const data = JSON.stringify(todos, null, 2);
-    // Download file
     const blob = new Blob([data], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'ai-todo-' + new Date().toISOString().split('T')[0] + '.json';
     a.click();
     URL.revokeObjectURL(a.href);
-    // Also copy to clipboard for pasting into Feishu
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(data).then(function() {
-        toast('📤 已导出 + 已复制到剪贴板。可粘贴到飞书发给机器人备份');
-      }).catch(function() {
-        toast('📤 已导出');
-      });
-    } else {
-      toast('📤 已导出');
-    }
+      navigator.clipboard.writeText(data).then(function() { toast('📤 已导出 + 已复制到剪贴板'); }).catch(function() { toast('📤 已导出'); });
+    } else { toast('📤 已导出'); }
   }
 
   function importData() {
     const input = document.createElement('input');
     input.type = 'file'; input.accept = '.json';
     input.onchange = e => {
-      const f = e.target.files[0];
-      if (!f) return;
+      const f = e.target.files[0]; if (!f) return;
       const r = new FileReader();
       r.onload = ev => {
         try {
           const d = JSON.parse(ev.target.result);
           if (!Array.isArray(d)) throw 0;
-          if (!confirm(`将导入 ${d.length} 项，覆盖当前数据？`)) return;
-          todos = d; save(); render();
-          toast(`已导入 ${d.length} 项`);
+          if (!confirm('将导入 ' + d.length + ' 项，覆盖当前数据？')) return;
+          todos = d; save(); render(); toast('已导入 ' + d.length + ' 项');
         } catch (_) { toast('文件格式错误'); }
       };
       r.readAsText(f);
@@ -1496,10 +1098,7 @@ const App = (() => {
     input.click();
   }
 
-  // ==================== Render ====================
-
   function render() {
-    // Stats
     const done = todos.filter(t => t.status === 'completed').length;
     const pending = todos.length - done;
     document.getElementById('statPending').textContent = pending;
@@ -1508,137 +1107,80 @@ const App = (() => {
     const palette = ['#4f6ef7','#22c55e','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#ec4899','#f97316','#06b6d4','#84cc16'];
     const paletteBg = ['#eef1ff','#e6f9ef','#fff8e6','#fef2f2','#f5f3ff','#e6faf7','#fdf2f8','#fff7ed','#ecfeff','#f7fee7'];
 
-    // Build cluster lookup
     const activeClusters = App._clusters || [];
     const clusterLookup = {};
     activeClusters.forEach((c, i) => { clusterLookup[c.id] = { ...c, ci: i % palette.length }; });
 
-    // For unclustered items, extract a self-tag
     function selfTag(todo) {
-      const words = tokenize(todo.title).filter(w => w.length >= 2 && !STOP.has(w));
+      const words = tokenize(todo.title).filter(w => w.length >= 2);
       if (words.length === 0) return '待办';
-      // Score: prefer medium-length words (2-4 chars) that appear early in title
-      const scored = words.map(w => {
-        const pos = todo.title.indexOf(w);
-        const lenScore = w.length >= 2 && w.length <= 4 ? 2 : 1;
-        const posScore = pos >= 0 && pos < todo.title.length * 0.5 ? 2 : 1;
-        return { word: w, score: lenScore + posScore };
-      });
-      scored.sort((a, b) => b.score - a.score);
-      const best = scored[0].word;
-      return best.length > 4 ? best.slice(0, 4) : best;
+      return words[0].length > 4 ? words[0].slice(0, 4) : words[0];
     }
 
-    // Dynamic filter dropdown
     const select = document.getElementById('filterSelect');
     const currentFilter = filter;
     let opts = '<option value="all">📋 全部 (' + pending + ')</option>';
     activeClusters.forEach((c, i) => {
       const count = todos.filter(t => t.category === c.id && t.status !== 'completed').length;
-      opts += `<option value="${c.id}">${c.name} (${count})</option>`;
+      opts += '<option value="' + c.id + '">' + c.name + ' (' + count + ')</option>';
     });
-    // Unclustered
     const unclustered = todos.filter(t => t.category === 'other' && t.status !== 'completed');
-    if (unclustered.length > 0 && activeClusters.length > 0) {
-      opts += `<option value="other">未分组 (${unclustered.length})</option>`;
-    }
-    // Completed section
-    if (done > 0) opts += `<option value="done">✅ 已完成 (${done})</option>`;
+    if (unclustered.length > 0 && activeClusters.length > 0) opts += '<option value="other">未分组 (' + unclustered.length + ')</option>';
+    if (done > 0) opts += '<option value="done">✅ 已完成 (' + done + ')</option>';
     select.innerHTML = opts;
-    select.value = (currentFilter === 'all' || !select.querySelector(`option[value="${currentFilter}"]`)) ? 'all' : currentFilter;
+    select.value = currentFilter;
 
-    // Filter
     let filtered;
     if (filter === 'all') filtered = [...todos];
     else if (filter === 'done') filtered = todos.filter(t => t.status === 'completed');
     else filtered = todos.filter(t => t.category === filter);
 
-    // Sort: pending first, then by priority desc
     filtered.sort((a, b) => {
       if (a.status === 'completed' && b.status !== 'completed') return 1;
       if (a.status !== 'completed' && b.status === 'completed') return -1;
-      return b.priority - a.priority;
+      return (b.priority || 0) - (a.priority || 0);
     });
 
-    // Render list
     const list = document.getElementById('todoList');
     if (filtered.length === 0) {
-      list.innerHTML = `<div class="empty-list"><div class="empty-icon">📝</div><div>暂无待办，在下方输入你的想法吧</div></div>`;
+      list.innerHTML = '<div class="empty-list"><div class="empty-icon">📝</div><div>暂无待办，在下方输入你的想法吧</div></div>';
     } else {
       list.innerHTML = filtered.map(t => {
         let tagHTML = '';
         const cl = clusterLookup[t.category];
         if (cl) {
-          tagHTML = `<span class="tag-dynamic" style="background:${paletteBg[cl.ci]};color:${palette[cl.ci]}">${cl.name}</span>`;
+          tagHTML = '<span class="tag-dynamic" style="background:' + paletteBg[cl.ci] + ';color:' + palette[cl.ci] + '">' + cl.name + '</span>';
         } else {
-          // Self-tag from own content
           const tag = selfTag(t);
           const ci = Math.abs(hashStr(tag)) % palette.length;
-          tagHTML = `<span class="tag-dynamic" style="background:${paletteBg[ci]};color:${palette[ci]}">${tag}</span>`;
+          tagHTML = '<span class="tag-dynamic" style="background:' + paletteBg[ci] + ';color:' + palette[ci] + '">' + tag + '</span>';
         }
-        return `
-          <div class="todo-item ${t.status === 'completed' ? 'done' : ''}">
-            <div class="checkbox" onclick="App.toggle('${t.id}')">${t.status === 'completed' ? '✓' : ''}</div>
-            <div class="todo-body">
-              <div class="todo-text" onclick="App.openEdit('${t.id}')" title="点击编辑">${esc(t.title)}${t.subTasks && t.subTasks.length ? ` <span class="sub-badge">${t.subTasks.filter(s=>s.done).length}/${t.subTasks.length}</span>` : ''}</div>
-              <div class="todo-meta">
-                ${tagHTML}
-                <span class="priority-dot ${t.priorityLabel}" title="${t.priorityLabel === 'high' ? '高优先' : t.priorityLabel === 'medium' ? '中优先' : '低优先'}"></span>
-                <span class="time-tag">${t.estimatedMinutes}min</span>
-              </div>
-            </div>
-            <div class="todo-actions">
-              <button class="mini-btn del" onclick="event.stopPropagation(); App.remove('${t.id}')">✕</button>
-            </div>
-          </div>`;
+        return '<div class="todo-item ' + (t.status === 'completed' ? 'done' : '') + '">' +
+          '<div class="checkbox" onclick="App.toggle(\'' + t.id + '\')">' + (t.status === 'completed' ? '✓' : '') + '</div>' +
+          '<div class="todo-body">' +
+            '<div class="todo-text" onclick="App.openEdit(\'' + t.id + '\')" title="点击编辑">' + esc(t.title) + (t.subTasks && t.subTasks.length ? ' <span class="sub-badge">' + t.subTasks.filter(s=>s.done).length + '/' + t.subTasks.length + '</span>' : '') + '</div>' +
+            '<div class="todo-meta">' + tagHTML + '<span class="priority-dot ' + (t.priorityLabel||'medium') + '"></span><span class="time-tag">' + (t.estimatedMinutes||30) + 'min</span></div>' +
+          '</div>' +
+          '<div class="todo-actions"><button class="mini-btn del" onclick="event.stopPropagation();App.remove(\'' + t.id + '\')">✕</button></div>' +
+        '</div>';
       }).join('');
     }
   }
 
-  // Simple string hash for consistent color assignment
-  function hashStr(s) {
-    let h = 0;
-    for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-    return Math.abs(h);
-  }
-
-  function esc(s) {
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-  }
-
-  function toast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.style.display = 'block';
-    clearTimeout(el._t);
-    el._t = setTimeout(() => el.style.display = 'none', 2200);
-  }
-
-  // ==================== Init ====================
+  function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0; return Math.abs(h); }
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.display = 'block'; clearTimeout(el._t); el._t = setTimeout(() => el.style.display = 'none', 2200); }
 
   function init() {
     load();
-    recluster();
-    render();
+    try { recluster(); } catch(e) {}
+    try { render(); } catch(e) {}
     updateAiStatus();
-
-    // Filter dropdown
-    document.getElementById('filterSelect').addEventListener('change', e => {
-      filter = e.target.value;
-      render();
-    });
-
-    // Edit panel: click overlay to close
-    document.getElementById('editPanel').addEventListener('click', e => {
-      if (e.target === document.getElementById('editPanel')) closeEdit();
-    });
-
-    // Keyboard shortcuts
+    document.getElementById('filterSelect').addEventListener('change', e => { filter = e.target.value; render(); });
+    document.getElementById('editPanel').addEventListener('click', e => { if (e.target === document.getElementById('editPanel')) closeEdit(); });
     document.addEventListener('keydown', e => {
       if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); syncFromThoughts(); }
-      if (e.key === 'Escape') { closeEdit(); }
+      if (e.key === 'Escape') { closeEdit(); closeSummary(); }
     });
   }
 
@@ -1647,7 +1189,6 @@ const App = (() => {
 
 document.addEventListener('DOMContentLoaded', () => App.init());
 
-// Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
