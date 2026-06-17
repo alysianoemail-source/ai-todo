@@ -545,18 +545,14 @@ body {
     </div>
   </div>
 
-  // Settings Panel
+  <!-- Settings Panel (key is server-side now) -->
   <div id="settingsPanel" style="display:none;background:var(--card);border-radius:10px;padding:12px;margin-bottom:4px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <span style="font-size:13px;font-weight:500;">🧠 AI 长文总结</span>
-      <span id="aiStatus" style="font-size:11px;color:var(--text3);">未设置</span>
+      <span style="font-size:11px;color:var(--green);">DeepSeek</span>
     </div>
-    <div style="display:flex;gap:6px;">
-      <input id="groqKey" type="password" placeholder="输入 DeepSeek API Key（sk-xxx）" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:monospace;">
-      <button class="sync-btn" style="padding:6px 12px;font-size:12px;white-space:nowrap;" onclick="App.saveGroqKey()">保存</button>
-    </div>
-    <div style="font-size:10px;color:var(--text3);margin-top:4px;">去 <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--blue);">platform.deepseek.com</a> 免费注册获取（浏览器直连，¥1/百万token）</div>
-    <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
+    <div style="font-size:10px;color:var(--text3);">Key 在服务器端，前端无需配置。</div>
+    <div style="margin-top:8px;">
       <button class="sync-btn" style="padding:6px 12px;font-size:11px;" onclick="App.testAi()">🔬 测试连接</button>
     </div>
     <div id="aiTestResult" style="display:none;margin-top:6px;"></div>
@@ -1000,29 +996,9 @@ const App = (() => {
     const input = document.getElementById('thoughtInput').value.trim();
     if (!input) return toast('请先在下方输入你的想法');
 
-    // Long text (>25 chars) → AI extraction
+    // Long text (>25 chars) → AI extraction (via /api/chat proxy)
     if (input.length >= 25) {
-      var key = localStorage.getItem('ai-key');
-      if (key) {
-        aiExtractTodos(input, key);
-        return;
-      }
-      // No AI key → local extraction
-      var extracted = extractTodosFromLongText(input);
-      if (extracted.length === 0) {
-        // Best-effort: split by common separators
-        var sentences = input.split(/[。！？\n，,；;]+/).filter(function(s){return s.trim().length>=4;});
-        if (sentences.length > 0) {
-          extracted = sentences.slice(0, 8).map(function(s) {
-            return { title: optimizeTitle(s.trim()), estimatedMinutes: 30, category: 'other', subTasks: [], note: '' };
-          }).filter(function(t){return t.title.length>=3;});
-        }
-      }
-      if (extracted.length === 0) {
-        // Last resort: use whole text as one item
-        extracted = [{ title: optimizeTitle(input), estimatedMinutes: 30, category: 'other', subTasks: [], note: '' }];
-      }
-      showSummaryPreview(extracted);
+      aiExtractTodos(input);
       return;
     }
 
@@ -1112,63 +1088,32 @@ const App = (() => {
     toast(msg + merge + skip || '列表已是最新');
   }
 
-  // ==================== AI Model (DeepSeek) ====================
+  // ==================== AI Model (DeepSeek via /api/chat) ====================
+
+  function updateAiStatus() {
+    var label = document.getElementById('aiLabel');
+    label.textContent = '🧠 AI 增强模式 (DeepSeek)';
+    label.style.color = 'var(--green)';
+  }
 
   function toggleSettings() {
     var panel = document.getElementById('settingsPanel');
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    if (panel.style.display === 'block') {
-      var key = localStorage.getItem('ai-key');
-      if (key) document.getElementById('groqKey').value = key;
-      updateAiStatus();
-    }
   }
 
-  function saveGroqKey() {
-    var key = document.getElementById('groqKey').value.trim();
-    if (key && key.length > 10) {
-      localStorage.setItem('ai-key', key);
-      document.getElementById('settingsPanel').style.display = 'none';
-      updateAiStatus();
-      toast('✅ Key 已保存');
-    } else {
-      toast('Key 太短');
-    }
-  }
-
-  function updateAiStatus() {
-    var key = localStorage.getItem('ai-key');
-    var el = document.getElementById('aiStatus');
-    var label = document.getElementById('aiLabel');
-    if (key) {
-      el.textContent = '已就绪 ✓';
-      el.style.color = 'var(--green)';
-      label.textContent = '🧠 AI 增强模式 (DeepSeek)';
-      label.style.color = 'var(--green)';
-    } else {
-      el.textContent = '未设置';
-      el.style.color = 'var(--text3)';
-      label.textContent = '💡 设 DeepSeek Key 后自动总结';
-      label.style.color = 'var(--text3)';
-    }
-  }
-
-  function aiExtractTodos(text, key) {
+  function aiExtractTodos(text) {
     var btn = document.getElementById('syncBtn');
     btn.textContent = '🤔 AI 总结中...';
     btn.disabled = true;
 
-    fetch('https://api.deepseek.com/chat/completions', {
+    fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'deepseek-chat',
         messages: [
           { role: 'system', content: '你是待办提取工具。从混乱文本中提取可执行待办。只返回JSON数组：[{"title":"简短标题","estimatedMinutes":30}]。不要其他内容。' },
           { role: 'user', content: text }
-        ],
-        temperature: 0.3,
-        max_tokens: 1024
+        ]
       })
     })
     .then(function(r) { return r.json(); })
@@ -1207,8 +1152,6 @@ const App = (() => {
   }
 
   function testAi() {
-    var key = localStorage.getItem('ai-key');
-    if (!key) { toast('请先保存 Key'); return; }
     var result = document.getElementById('aiTestResult');
     result.textContent = '⏳ 测试中...';
     result.style.display = 'block';
@@ -1222,11 +1165,10 @@ const App = (() => {
     result.style.maxHeight = '200px';
     result.style.overflow = 'auto';
 
-    fetch('https://api.deepseek.com/chat/completions', {
+    fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'deepseek-chat',
         messages: [{ role: 'user', content: '你好' }],
         max_tokens: 10
       })
@@ -1671,7 +1613,7 @@ const App = (() => {
     });
   }
 
-  return { init, syncFromThoughts, toggle, remove, openEdit, closeEdit, saveEdit, addSubTask, toggleSubTask, removeSubTask, archiveOld, clearThoughts, exportData, importData, confirmSummary, closeSummary, toggleSummaryItem, editSummaryItem, addSummaryItem, toggleSettings, saveGroqKey, testAi };
+  return { init, syncFromThoughts, toggle, remove, openEdit, closeEdit, saveEdit, addSubTask, toggleSubTask, removeSubTask, archiveOld, clearThoughts, exportData, importData, confirmSummary, closeSummary, toggleSummaryItem, editSummaryItem, addSummaryItem, toggleSettings, testAi };
 })();
 
 document.addEventListener('DOMContentLoaded', () => App.init());
