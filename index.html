@@ -802,7 +802,9 @@ const App = (() => {
         }
       }
       var entries = [];
-      for (var key in wordCount) { if (wordCount.hasOwnProperty(key)) entries.push([key, wordCount[key]]); }
+      if (wordCount && typeof wordCount === 'object') {
+        for (var key in wordCount) { if (wordCount.hasOwnProperty(key)) entries.push([key, wordCount[key]]); }
+      }
       entries.sort(function(a, b) { return b[1] - a[1]; });
       var name = entries.slice(0, 2).map(function(x) { return x[0]; }).join('·');
       const clusterId = 'c' + idx;
@@ -1301,9 +1303,9 @@ const App = (() => {
 
     closeSummary();
     document.getElementById('thoughtInput').value = '';
-    try { recluster(); } catch(e) {}
+    try { recluster(); } catch(e) { console.log('recluster', e); }
     save();
-    try { render(); } catch(e) {}
+    try { render(); } catch(e) { console.log('render', e); }
     if (added > 0) toast('✅ 已加入 ' + added + ' 条待办');
     else toast('⚠️ 无效或已存在，未新增');
   }
