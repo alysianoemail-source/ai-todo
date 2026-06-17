@@ -1,0 +1,7 @@
+bot-listener.js
+auth-qr.png
+todo-sync.md
+pending-summary.txt
+summary-result.json
+*.py
+__pycache__
