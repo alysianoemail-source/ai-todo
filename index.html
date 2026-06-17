@@ -1252,32 +1252,57 @@ const App = (() => {
   }
 
   function confirmSummary() {
-    const selected = summaryItems.filter(s => s._checked && s._title.trim());
+    var selected = [];
+    for (var i = 0; i < summaryItems.length; i++) {
+      var s = summaryItems[i];
+      if (!s._checked) continue;
+      if (!s._title || !s._title.trim()) continue;
+      selected.push(s);
+    }
     if (selected.length === 0) return toast('请至少选一条');
-    let added = 0;
-    for (const item of selected) {
-      const title = item._title.trim();
-      if (!title || todos.some(t => t.title === title)) continue;
-      const urg = calcUrgency(title);
-      const imp = calcImportance(title);
-      const est = item.estimatedMinutes || estimateTime(title);
-      const pri = priorityScore(urg, imp, est);
-      const label = pri >= 70 ? 'high' : pri >= 40 ? 'medium' : 'low';
+
+    var added = 0;
+    for (var j = 0; j < selected.length; j++) {
+      var item = selected[j];
+      var title = item._title.trim();
+      if (title.length < 2) continue;
+      // Skip exact duplicates
+      var dup = false;
+      for (var k = 0; k < todos.length; k++) {
+        if (todos[k].title === title) { dup = true; break; }
+      }
+      if (dup) continue;
+
+      var urg = calcUrgency(title);
+      var imp = calcImportance(title);
+      var est = item.estimatedMinutes || estimateTime(title);
+      var pri = priorityScore(urg, imp, est);
+      var label = pri >= 70 ? 'high' : pri >= 40 ? 'medium' : 'low';
+
       todos.push({
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        title, category: item.category || 'other', priority: pri,
-        priorityLabel: label, urgency: urg, importance: imp,
-        estimatedMinutes: est, status: 'pending',
+        id: (Date.now() + j).toString(36) + Math.random().toString(36).slice(2, 6),
+        title: title,
+        category: item.category || 'other',
+        priority: pri,
+        priorityLabel: label,
+        urgency: urg,
+        importance: imp,
+        estimatedMinutes: est,
+        status: 'pending',
         createdAt: new Date().toISOString(),
-        subTasks: (item.subTasks || []).map(st => ({ id: Date.now().toString(36), title: st, done: false })),
+        subTasks: [],
         note: item.note || ''
       });
       added++;
     }
+
     closeSummary();
     document.getElementById('thoughtInput').value = '';
-    recluster(); save(); render();
+    try { recluster(); } catch(e) {}
+    try { save(); } catch(e) {}
+    try { render(); } catch(e) {}
     toast('✅ 已加入 ' + added + ' 条待办');
+    if (added === 0) toast('⚠️ 所有条目已存在或无效，未新增');
   }
 
   function closeSummary() {
