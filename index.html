@@ -1121,29 +1121,67 @@ const App = (() => {
       btn.textContent = '✨ 一键更新';
       btn.disabled = false;
       var content = data.choices && data.choices[0] && data.choices[0].message.content;
-      if (!content) { toast('AI 返回为空'); fallbackExtract(text); return; }
+      if (!content) {
+        // Fall back to local extraction
+        directAddFromLocal(text);
+        return;
+      }
       try {
         var jsonStr = content.match(/\[[\s\S]*\]/);
-        if (!jsonStr) { toast('格式异常，已用本地提取'); fallbackExtract(text); return; }
-        var todos = JSON.parse(jsonStr[0]);
-        if (!todos.length) { toast('未提取到待办项'); return; }
-        showSummaryPreview(todos.map(function(t) {
-          return { title: t.title, estimatedMinutes: t.estimatedMinutes || 30, category: 'other', subTasks: [], note: '' };
-        }));
+        if (!jsonStr) { directAddFromLocal(text); return; }
+        var aiTodos = JSON.parse(jsonStr[0]);
+        if (!aiTodos.length) { directAddFromLocal(text); return; }
+
+        // Directly add to list (skip preview)
+        var added = 0;
+        for (var i = 0; i < aiTodos.length; i++) {
+          var t = aiTodos[i];
+          var title = (t.title || '').trim();
+          if (!title || title.length < 2) continue;
+          // Skip duplicates
+          var dup = false;
+          for (var j = 0; j < todos.length; j++) {
+            if (todos[j].title === title) { dup = true; break; }
+          }
+          if (dup) continue;
+
+          var urg = calcUrgency(title);
+          var imp = calcImportance(title);
+          var est = t.estimatedMinutes || estimateTime(title);
+          var pri = priorityScore(urg, imp, est);
+          var label = pri >= 70 ? 'high' : pri >= 40 ? 'medium' : 'low';
+
+          todos.push({
+            id: (Date.now() + i).toString(36) + Math.random().toString(36).slice(2, 6),
+            title: title,
+            category: 'other',
+            priority: pri,
+            priorityLabel: label,
+            urgency: urg,
+            importance: imp,
+            estimatedMinutes: est,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            subTasks: [],
+            note: ''
+          });
+          added++;
+        }
+        document.getElementById('thoughtInput').value = '';
+        recluster(); save(); render();
+        toast('✅ AI 已提取 ' + added + ' 条待办');
       } catch(e) {
-        toast('解析失败，已用本地提取');
-        fallbackExtract(text);
+        directAddFromLocal(text);
       }
     })
     .catch(function(e) {
       btn.textContent = '✨ 一键更新';
       btn.disabled = false;
-      toast('❌ ' + (e.message || '调用失败'));
-      fallbackExtract(text);
+      directAddFromLocal(text);
     });
   }
 
-  function fallbackExtract(text) {
+  function directAddFromLocal(text) {
     var extracted = extractTodosFromLongText(text);
     if (extracted.length === 0) {
       extracted = [{ title: optimizeTitle(text), estimatedMinutes: 30, category: 'other', subTasks: [], note: '' }];
