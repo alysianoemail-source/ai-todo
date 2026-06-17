@@ -787,7 +787,7 @@ const App = (() => {
     const clusters = components.map((ids, idx) => {
       const wordCount = {};
       for (const id of ids) {
-        const tw = todoWords.find(x => x.id === id);
+        const tw = todoKeys.find(x => x.id === id);
         if (!tw) continue;
         for (const [w, c] of Object.entries(tw.freq)) wordCount[w] = (wordCount[w] || 0) + c;
       }
