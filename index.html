@@ -788,11 +788,15 @@ const App = (() => {
       const wordCount = {};
       for (const id of ids) {
         const tw = todoKeys.find(x => x.id === id);
-        if (!tw) continue;
-        for (const [w, c] of Object.entries(tw.freq)) wordCount[w] = (wordCount[w] || 0) + c;
+        if (!tw || !tw.freq) continue;
+        for (var w in tw.freq) {
+          if (tw.freq.hasOwnProperty(w)) wordCount[w] = (wordCount[w] || 0) + tw.freq[w];
+        }
       }
-      const sorted = Object.entries(wordCount).sort((a, b) => b[1] - a[1]);
-      const name = sorted.slice(0, 2).map(x => x[0]).join('·');
+      var entries = [];
+      for (var key in wordCount) { if (wordCount.hasOwnProperty(key)) entries.push([key, wordCount[key]]); }
+      entries.sort(function(a, b) { return b[1] - a[1]; });
+      var name = entries.slice(0, 2).map(function(x) { return x[0]; }).join('·');
       const clusterId = 'c' + idx;
       return { id: clusterId, name, ids: new Set(ids) };
     });
@@ -863,31 +867,17 @@ const App = (() => {
 
   let todos = [];
   let filter = 'all';
-  var SYNC_URL = 'https://jsonblob.com/api/jsonBlob/019ec939-63c6-78b0-a9eb-d299acdfb743';
 
   function save() {
     localStorage.setItem('ai-todo-v3', JSON.stringify(todos));
-    fetch(SYNC_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ todos: todos })
-    }).catch(function(){});
   }
 
   function load() {
-    fetch(SYNC_URL)
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.todos && data.todos.length > 0) {
-          todos = data.todos;
-          localStorage.setItem('ai-todo-v3', JSON.stringify(todos));
-          render();
-        }
-      })
-      .catch(function() {
-        var d = localStorage.getItem('ai-todo-v3') || localStorage.getItem('ai-todo-v2');
-        if (d) { todos = JSON.parse(d); render(); }
-      });
+    try {
+      var d = localStorage.getItem('ai-todo-v3') || localStorage.getItem('ai-todo-v2');
+      if (d) todos = JSON.parse(d);
+      else todos = [];
+    } catch (_) { todos = []; }
   }
 
   // ==================== Title Optimizer ====================
